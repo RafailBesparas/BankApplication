@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Register - BesparasBank</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .navbar-custom {
+            background-color: #1b1b1b;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .navbar-custom a {
+            color: #ffffff !important;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .container {
+            max-width: 450px;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .form-group label {
+            text-align: left;
+            color: #ccc;
+            display: block;
+        }
+
+        .form-group input {
+            border: 1px solid #ffd700;
+            background-color: #2c2c2c;
+            color: #ffffff;
+        }
+
+        .btn {
+            background-color: #ffd700;
+            border: none;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #e6c200;
+        }
+
+        .custom-link {
+            color: #ffd700;
+            text-decoration: none;
+        }
+
+        .custom-link:hover {
+            text-decoration: underline;
+            color: #fff1a5;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 14px;
+            background-color: #1b1b1b;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <a class="navbar-brand" href="#">BesparasBank</a>
+</nav>
+
+<div class="container">
+    <h2 class="text-white">Create Your Account</h2>
+    <form method="post" action="/register">
+        <div class="form-group">
+            <label>Username:</label>
+            <input type="text" class="form-control" name="username" required />
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" class="form-control" name="password" required />
+        </div>
+        <button type="submit" class="btn btn-block">Register</button>
+    </form>
+    <p class="mt-3">Already registered? <a href="/login" class="custom-link">Login here</a></p>
+
+    <div th:if="${error}" class="alert alert-danger mt-3 text-center">
+        User already exists.
+    </div>
+</div>
+
+<footer class="footer">
+    &copy; 2024 BesparasBank. All rights reserved.
+</footer>
+
+</body>
+</html>

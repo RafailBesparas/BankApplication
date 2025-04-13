@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Transaction History - BesparasBank</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #1f4037, #99f2c8);
+            color: #ffffff;
+            padding: 0;
+            margin: 0;
+        }
+
+        .navbar-custom {
+            background-color: #1b1b1b;
+        }
+
+        .navbar-custom a {
+            color: #ffffff !important;
+        }
+
+        .container {
+            margin-top: 100px;
+        }
+
+        .table-custom {
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        table th, table td {
+            color: #ffffff;
+        }
+
+        table th {
+            background-color: #ffd700;
+            color: #000;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .text-success {
+            color: #28a745 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .custom-link {
+            color: #ffd700;
+            text-decoration: none;
+        }
+
+        .custom-link:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+    <a class="navbar-brand" href="#">BesparasBank</a>
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+    <h2 class="text-center">Transaction History</h2>
+    <div class="table-responsive table-custom mt-4">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="transaction : ${transactions}">
+                <td th:text="${transaction.id}"></td>
+                <td th:text="${transaction.type}"></td>
+                <td th:text="${transaction.amount}"
+                    th:classappend="${transaction.type.contains('Transfer In') || transaction.type == 'Deposit'} ? 'text-success' : 'text-danger'">
+                </td>
+                <td th:text="${transaction.timestamp}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="text-center mt-3"><a href="/dashboard" class="custom-link">Back to Dashboard</a></p>
+</div>
+
+</body>
+</html>

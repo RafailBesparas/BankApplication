@@ -5,8 +5,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 
 @Entity
 public class AccountModel implements UserDetails {
@@ -19,7 +19,7 @@ public class AccountModel implements UserDetails {
     private String password;
     private BigDecimal balance;
 
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private List<Transaction> transactions;
 
     @Transient
@@ -28,21 +28,36 @@ public class AccountModel implements UserDetails {
     public AccountModel() {
     }
 
-    public AccountModel(String username, String password, BigDecimal balance, List<Transaction> transactions) {
+    public AccountModel(String username, String password, BigDecimal balance, List<Transaction> transactions, Collection<? extends GrantedAuthority> authorities) {
         this.username = username;
         this.password = password;
         this.balance = balance;
         this.transactions = transactions;
+        this.authorities = authorities;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public void setId(Long id) { this.id = id; }
 
+    public String getUsername() { return username; }
+
+    public void setUsername(String username) { this.username = username; }
+
+    @Override
+    public String getPassword() { return password; }
+
+    public void setPassword(String password) { this.password = password; }
+
+    public BigDecimal getBalance() { return balance; }
+
+    public void setBalance(BigDecimal balance) { this.balance = balance; }
+
+    public List<Transaction> getTransactions() { return transactions; }
+
+    public void setTransactions(List<Transaction> transactions) { this.transactions = transactions; }
+
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
@@ -51,35 +66,16 @@ public class AccountModel implements UserDetails {
         this.authorities = authorities;
     }
 
-    public List<Transaction> getTransactions() {
-        return transactions;
-    }
+    // Default UserDetails settings
+    @Override
+    public boolean isAccountNonExpired() { return true; }
 
-    public void setTransactions(List<Transaction> transactions) {
-        this.transactions = transactions;
-    }
+    @Override
+    public boolean isAccountNonLocked() { return true; }
 
-    public BigDecimal getBalance() {
-        return balance;
-    }
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
 
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    @Override
+    public boolean isEnabled() { return true; }
 }

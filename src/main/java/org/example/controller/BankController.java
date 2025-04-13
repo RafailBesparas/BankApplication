@@ -3,12 +3,10 @@ package org.example.controller;
 import org.example.model.AccountModel;
 import org.example.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
@@ -18,85 +16,47 @@ public class BankController {
     @Autowired
     private AccountService accountService;
 
-    @GetMapping("/dashboards")
-    public String dashboard(Model model){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        AccountModel account = accountService.findAccountByUsername(username);
-        model.getAttribute("account", account);
-        return "dashboard";
+    @GetMapping("/login")
+    public String login() {
+        return "login";
     }
 
     @GetMapping("/register")
-    public String showRegistrationForm(){
+    public String showRegisterForm(Model model) {
+        model.addAttribute("account", new AccountModel());
         return "register";
     }
 
     @PostMapping("/register")
-    public String registerAccount(@RequestParam String username,
-                                  @RequestParam String password,
-                                  Model model){
-        try{
-            accountService.registerAccount(username, password);
-            return "redirect:/login";
-        } catch (RuntimeException e){
-            model.addAttribute("error",  e.getMessage());
-            return "register";
-        }
+    public String register(@ModelAttribute AccountModel account) {
+        accountService.register(account);
+        return "redirect:/login";
     }
 
-    @GetMapping("/login")
-    public String login(){
-        return "login";
+    @GetMapping("/dashboard")
+    public String dashboard(@AuthenticationPrincipal AccountModel account, Model model) {
+        model.addAttribute("account", account);
+        model.addAttribute("transactions", accountService.getTransactionHistory(account));
+        return "dashboard";
     }
 
     @PostMapping("/deposit")
-    public String deposit(@RequestParam BigDecimal amount){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        AccountModel account = accountService.findAccountByUsername(username);
+    public String deposit(@AuthenticationPrincipal AccountModel account,
+                          @RequestParam BigDecimal amount,
+                          Model model) {
         accountService.deposit(account, amount);
         return "redirect:/dashboard";
     }
 
     @PostMapping("/withdraw")
-    public String withdraw(@RequestParam BigDecimal amount, Model model){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        AccountModel account = accountService.findAccountByUsername(username);
-
+    public String withdraw(@AuthenticationPrincipal AccountModel account,
+                           @RequestParam BigDecimal amount,
+                           Model model) {
         try {
             accountService.withdraw(account, amount);
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("account", account);
-            return "dashboard";
-        }
-
-        return "redirect:/dashboard";
-    }
-
-    @GetMapping("/transactions")
-    public String transactionHistory(Model model){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        AccountModel account = accountService.findAccountByUsername(username);
-        model.addAttribute("transactions", accountService.getTransactionHistory(account));
-        return "transactions";
-    }
-
-    @PostMapping("/transfer")
-    public String transferAmount(@RequestParam String toUsername,
-                                 @RequestParam BigDecimal amount,
-                                 Model model){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        AccountModel fromAccount = accountService.findAccountByUsername(username);
-
-        try{
-            accountService.transferAmount(fromAccount, toUsername, amount);
-        }catch (RuntimeException e){
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("account", fromAccount);
-            return "dashboard";
         }
         return "redirect:/dashboard";
     }
-
-
 }
