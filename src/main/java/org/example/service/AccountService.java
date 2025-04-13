@@ -5,12 +5,19 @@ import org.example.model.Transaction;
 import org.example.repository.AccountRepository;
 import org.example.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 @Service
 public class AccountService implements UserDetailsService {
@@ -68,6 +75,55 @@ public class AccountService implements UserDetailsService {
                 account
         );
         transactionRepository.save(transaction);
+    }
+
+    public List<Transaction> getTransactionHistory(AccountModel account){
+        return transactionRepository.findByAccount(account.getId());
+    }
+
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        AccountModel account = findAccountByUsername(username);
+        if(account == null){
+            throw new UsernameNotFoundException("This User does not exist!!! Username or password is incorrect");
+        }
+        return new AccountModel(
+                account.getUsername(),
+                account.getPassword(),
+                account.getBalance(),
+                account.getTransactions(),
+                authorities()
+        );
+    }
+
+    public Collection<? extends GrantedAuthority> authorities(){
+        return Arrays.asList(new SimpleGrantedAuthority("User"));
+    }
+
+    public void transferAmount(AccountModel fromAccount, String toUsername, BigDecimal amount){
+        if(fromAccount.getBalance().compareTo(amount) < 0){
+            throw new RuntimeException("Not enough money!!! You cannot transfer!!! ");
+        }
+
+        AccountModel toAccount = accountRepository.findByUsername(toUsername)
+                .orElseThrow(() -> new RuntimeException("Recipient account not found  "));
+
+        // When the account is found then we must deduct the amount from the account
+        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+        accountRepository.save(fromAccount);
+
+        //Transfer the money to the other account
+        toAccount.setBalance(toAccount.getBalance().add(amount));
+        accountRepository.save(toAccount);
+
+        // Create transaction records
+        Transaction debitTransaction = new Transaction(
+                "Transfer Out to" + toAccount.getUsername(),
+                amount,
+                LocalDateTime.now(),
+                fromAccount
+        );
+        transactionRepository.save(debitTransaction);
+
     }
 
 }
