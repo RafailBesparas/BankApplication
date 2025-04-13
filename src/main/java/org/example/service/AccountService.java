@@ -115,7 +115,7 @@ public class AccountService implements UserDetailsService {
         toAccount.setBalance(toAccount.getBalance().add(amount));
         accountRepository.save(toAccount);
 
-        // Create transaction records
+        // Create transaction records for debit
         Transaction debitTransaction = new Transaction(
                 "Transfer Out to" + toAccount.getUsername(),
                 amount,
@@ -123,6 +123,15 @@ public class AccountService implements UserDetailsService {
                 fromAccount
         );
         transactionRepository.save(debitTransaction);
+
+        // Create transaction records for Credit
+        Transaction creditTransaction = new Transaction(
+                "Transfer In to" + fromAccount.getUsername(),
+                amount,
+                LocalDateTime.now(),
+                toAccount
+        );
+        transactionRepository.save(creditTransaction);
 
     }
 
