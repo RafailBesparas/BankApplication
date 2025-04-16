@@ -44,6 +44,10 @@ public class AccountService implements UserDetailsService {
         );
     }
 
+    public AccountModel getByUsername(String username) {
+        return accountRepository.findByUsername(username);
+    }
+
     public void register(AccountModel account) {
         account.setPassword(passwordEncoder.encode(account.getPassword()));
         account.setBalance(BigDecimal.ZERO);
