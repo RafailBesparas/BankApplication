@@ -73,6 +73,10 @@
         <div class="balance-box" th:text="'$' + ${account.balance}">Loading...</div>
     </div>
 
+    <div th:if="${lastTransferRecipient}" class="alert alert-info mt-3">
+        Last transfer was sent to: <strong th:text="${lastTransferRecipient}"></strong>
+    </div>
+
     <div class="row">
         <!-- Deposit -->
         <div class="col-md-4 form-section">

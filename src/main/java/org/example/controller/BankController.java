@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 
@@ -35,10 +36,15 @@ public class BankController {
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String dashboard(@AuthenticationPrincipal UserDetails userDetails,
+                            Model model,
+                            @ModelAttribute("lastTransferRecipient") String lastTransferRecipient) {
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
         model.addAttribute("account", account);
         model.addAttribute("transactions", accountService.getTransactionHistory(account));
+        if (lastTransferRecipient != null && !lastTransferRecipient.isBlank()) {
+            model.addAttribute("lastTransferRecipient", lastTransferRecipient);
+        }
         return "dashboard";
     }
 
@@ -63,24 +69,23 @@ public class BankController {
         return "redirect:/dashboard";
     }
 
+    @GetMapping("/transactions")
+    public String viewTransactions(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        AccountModel account = accountService.getByUsername(userDetails.getUsername());
+        model.addAttribute("transactions", accountService.getTransactionHistory(account));
+        return "transaction"; // must match the transaction.html file name
+    }
+
     @PostMapping("/transfer")
     public String transfer(@AuthenticationPrincipal UserDetails userDetails,
                            @RequestParam String recipient,
                            @RequestParam BigDecimal amount,
-                           Model model) {
-        AccountModel sender = accountService.getByUsername(userDetails.getUsername());
-        AccountModel receiver = accountService.getByUsername(recipient);
-
-        if (receiver == null) {
-            model.addAttribute("error", "Recipient not found");
-            return "redirect:/dashboard";
-        }
-
+                           RedirectAttributes redirectAttributes) {
         try {
-            accountService.withdraw(sender, amount);
-            accountService.deposit(receiver, amount);
+            accountService.transfer(userDetails.getUsername(), recipient, amount);
+            redirectAttributes.addFlashAttribute("lastTransferRecipient", recipient);
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
 
         return "redirect:/dashboard";

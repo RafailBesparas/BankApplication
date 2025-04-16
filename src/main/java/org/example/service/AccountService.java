@@ -71,6 +71,35 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(account);
     }
 
+    public void transfer(String senderUsername, String recipientUsername, BigDecimal amount) {
+        AccountModel sender = getByUsername(senderUsername);
+        AccountModel recipient = getByUsername(recipientUsername);
+
+        if (recipient == null) {
+            throw new RuntimeException("Recipient does not exist.");
+        }
+
+        if (sender.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient funds for transfer.");
+        }
+
+        // Update balances
+        sender.setBalance(sender.getBalance().subtract(amount));
+        recipient.setBalance(recipient.getBalance().add(amount));
+
+        // Save transactions
+        Transaction txOut = new Transaction(amount, "Transfer Out to " + recipientUsername, LocalDateTime.now(), sender);
+        Transaction txIn = new Transaction(amount, "Transfer In from " + senderUsername, LocalDateTime.now(), recipient);
+
+        transactionRepository.save(txOut);
+        transactionRepository.save(txIn);
+
+        // Save updated accounts
+        accountRepository.save(sender);
+        accountRepository.save(recipient);
+    }
+
+
     public List<Transaction> getTransactionHistory(AccountModel account) {
         return transactionRepository.findByAccount(account);
     }
