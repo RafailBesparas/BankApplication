@@ -1,0 +1,44 @@
+/* Header & Footer Styling */
+.navbar {
+    background-color: #2c2f33;
+    padding: 12px 32px;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.navbar-brand:hover {
+    color: #dddddd;
+}
+
+.navbar-nav {
+    margin-left: auto;
+}
+
+.nav-item {
+    margin-left: 15px;
+}
+
+.nav-link {
+    color: #cccccc !important;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: #ffffff !important;
+    text-decoration: underline;
+}
+
+footer {
+    background-color: #2c2f33;
+    color: #cccccc;
+    padding: 12px;
+    text-align: center;
+    font-size: 0.9rem;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}

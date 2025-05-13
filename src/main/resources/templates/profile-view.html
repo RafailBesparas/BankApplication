@@ -2,8 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Transaction History - BesparasBank</title>
-    <link rel="stylesheet" href="/css/transactions.css">
+    <title>Profile View</title>
+    <link rel="stylesheet" href="/css/profile.css">
     <link rel="stylesheet" href="/css/fragments.css">
     <style>
         header {
@@ -59,31 +59,18 @@
     </nav>
 </header>
 
-<div class="container">
-    <h2>Transaction History</h2>
-    <div class="table-wrapper">
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Date</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="transaction : ${transactions}">
-                <td th:text="${transaction.id}"></td>
-                <td th:text="${transaction.type}"></td>
-                <td th:text="${transaction.amount}"
-                    th:classappend="${transaction.type.contains('Transfer In') or transaction.type == 'DEPOSIT'} ? 'text-success' : 'text-danger'">
-                </td>
-                <td th:text="${transaction.timestamp}"></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <p class="center-link"><a href="/dashboard">← Back to Dashboard</a></p>
+<!-- Main Content -->
+<div class="profile-container">
+    <h2>Your Profile</h2>
+    <div><strong>Name:</strong> <span th:text="|${profile.firstName} ${profile.lastName}|"></span></div>
+    <div><strong>Date of Birth:</strong> <span th:text="${profile.dateOfBirth}"></span></div>
+    <div><strong>National ID:</strong> <span th:text="${profile.nationalId}"></span></div>
+    <div><strong>Address:</strong> <span th:text="${profile.address}"></span></div>
+    <div><strong>Email:</strong> <span th:text="${profile.email}"></span></div>
+    <div><strong>Phone:</strong> <span th:text="${profile.phone}"></span></div>
+    <div><strong>Employment Status:</strong> <span th:text="${profile.employmentStatus}"></span></div>
+    <div><strong>Annual Income:</strong> $<span th:text="${profile.annualIncome}"></span></div>
+    <a href="/profile/edit">Edit Profile</a>
 </div>
 
 <footer>

@@ -1,33 +1,135 @@
-# 💳 BesparasBank
+# 💳 BesparasBank – Enterprise-Ready Banking Web Application (Version 2)
 
-**BesparasBank** is a modern and secure Java Spring Boot web application that simulates a real-world online banking system. It allows users to register, log in, and manage their finances by performing transactions such as deposits, withdrawals, and transfers. It also features a transaction history and account balance dashboard — all styled to match a professional banking experience.
-
----
-
-## 🚀 Features
-
-- ✅ User registration and login with Spring Security
-- 💰 View current account balance in real time
-- 💸 Perform deposits, withdrawals, and transfers
-- 📄 View transaction history by user
-- 🔐 Password encryption using BCrypt
-- 📊 Clean, responsive UI styled like a modern banking dashboard
-- ✅ Authentication and session management
-- 🧪 Error handling and validation included
+**BesparasBank** is a secure, modular, and fully documented Spring Boot-based web banking system built for enterprise-grade usage, development training, and compliance demonstration.
 
 ---
 
-## 🛠️ Technologies Used
+## 🧭 Overview
 
-| Layer            | Tech Stack                               |
-|------------------|-------------------------------------------|
-| Backend          | Java 17, Spring Boot, Spring MVC          |
-| Security         | Spring Security, BCrypt                   |
-| Persistence      | Spring Data JPA, H2 / MySQL (configurable)|
-| Frontend         | HTML5, Thymeleaf, Bootstrap 4             |
-| Build Tool       | Maven                                     |
+This application provides users with full banking capabilities including:
+
+- Registration and Login
+- Secure Dashboard with Balance Overview
+- Profile Management (PII-compliant)
+- Deposits, Withdrawals, Transfers
+- Transaction History
+- Thymeleaf-based UI with modular fragments
 
 ---
 
-## 📂 Project Structure
+## 🧱 Layered Architecture
 
+```
+org.example
+├── controller
+│   ├── BankController.java
+│   ├── AccountSummaryController.java
+│   └── ClientProfileController.java
+│
+├── service
+│   ├── AccountService.java
+│   └── ClientProfileService.java
+│
+├── repository
+│   ├── AccountRepository.java
+│   ├── ClientProfileRepository.java
+│   └── TransactionRepository.java
+│
+├── model
+│   ├── AccountModel.java
+│   ├── ClientProfile.java
+│   └── Transaction.java
+│
+├── config
+│   └── SecurityConfig.java
+│
+└── BankingApplication.java
+```
+
+---
+
+## 🧩 Key Features
+
+### 🔒 Security
+
+- Spring Security-based filter chain
+- BCrypt password hashing
+- Session-based authentication
+- Controller-level protection and login/logout routes
+
+### 📄 Profile & Account
+
+- View/edit user profile (ClientProfile)
+- Account linking and validation
+- GDPR-friendly annotations and secure storage
+
+### 💸 Transactions
+
+- Deposit, Withdraw, Transfer with validation
+- Bidirectional transaction logging (Transfer In/Out)
+- Transaction history in dashboard and reports
+
+---
+
+## 🎨 UI Pages (Thymeleaf)
+
+| Page | Purpose |
+|------|---------|
+| `/login` | Secure login |
+| `/register` | New account creation |
+| `/dashboard` | Account overview + operations |
+| `/profile` | View profile |
+| `/profile/edit` | Edit profile |
+| `/account-summary` | Balance + recent transactions |
+| `/transactions` | Full history view |
+
+---
+
+## 📜 Documentation & Compliance
+
+Every class, method, and entity is documented with:
+
+- **JavaDoc annotations**
+- **Spring annotations**
+- **GDPR/PII notes**
+- **Security & Audit insights**
+- **Domain-specific comments for banking**
+
+All services follow **Separation of Concerns**, and repositories are designed to comply with **traceability, performance, and modularity**.
+
+---
+
+## ⚙️ Technologies Used
+
+| Layer | Technology |
+|-------|------------|
+| Backend | Spring Boot |
+| Security | Spring Security |
+| ORM | Spring Data JPA |
+| Frontend | Thymeleaf, Bootstrap |
+| DB | H2/MySQL (configurable) |
+| Java Version | 17+ |
+
+---
+
+## 🚀 Run Locally
+
+```bash
+git clone https://github.com/yourusername/besparasbank.git
+cd besparasbank
+./mvnw spring-boot:run
+```
+
+Open browser: [http://localhost:8080](http://localhost:8080)
+
+---
+
+## 👨‍💻 Developer
+
+Documented, built, and reviewed for production by **Rafael Besparas**
+
+---
+
+## 📌 License
+
+MIT License – For educational, demonstration, and enterprise prototyping use.

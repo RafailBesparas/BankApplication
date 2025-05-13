@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BesparasBank – Architecture Overview</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 2rem;
+      background-color: #f9f9f9;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    code {
+      background-color: #efefef;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    .box {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>BesparasBank – Software Architecture Overview</h1>
+
+  <div class="box">
+    <h2>1. Purpose</h2>
+    <p>This document describes the high-level software architecture of <strong>BesparasBank</strong>, a secure online banking platform built using Spring Boot. It outlines the structure, responsibilities, and integration of core components.</p>
+  </div>
+
+  <div class="box">
+    <h2>2. Technology Stack</h2>
+    <ul>
+      <li><strong>Backend:</strong> Java 17, Spring Boot, Spring Security</li>
+      <li><strong>Frontend:</strong> Thymeleaf, Bootstrap, HTML5/CSS</li>
+      <li><strong>Database:</strong> H2 / MySQL (via Spring Data JPA)</li>
+      <li><strong>Security:</strong> BCrypt password hashing, authentication providers</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h2>3. System Layers</h2>
+    <pre><code>org.example
+├── controller
+│   ├── BankController.java
+│   ├── AccountSummaryController.java
+│   └── ClientProfileController.java
+│
+├── service
+│   ├── AccountService.java
+│   └── ClientProfileService.java
+│
+├── repository
+│   ├── AccountRepository.java
+│   ├── ClientProfileRepository.java
+│   └── TransactionRepository.java
+│
+├── model
+│   ├── AccountModel.java
+│   ├── ClientProfile.java
+│   └── Transaction.java
+│
+├── config
+│   └── SecurityConfig.java
+│
+└── BankingApplication.java
+</code></pre>
+  </div>
+
+  <div class="box">
+    <h2>4. Key Components</h2>
+    <ul>
+      <li><strong>AccountService</strong> – Handles registration, deposit, withdrawal, and transfer logic.</li>
+      <li><strong>SecurityConfig</strong> – Manages authentication, authorization, and password security.</li>
+      <li><strong>ClientProfileService</strong> – Manages personal user data (PII) with compliance awareness.</li>
+      <li><strong>Transaction</strong> – Represents immutable financial records, used for auditing.</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h2>5. Security Considerations</h2>
+    <ul>
+      <li>All credentials are hashed using <code>BCrypt</code>.</li>
+      <li>All sensitive endpoints are protected using Spring Security annotations and session management.</li>
+      <li>Client PII is separated into <code>ClientProfile</code> with limited exposure.</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h2>6. UI Pages</h2>
+    <ul>
+      <li><code>/login</code> – User authentication</li>
+      <li><code>/register</code> – Create account</li>
+      <li><code>/dashboard</code> – Operations overview</li>
+      <li><code>/profile</code> – View user information</li>
+      <li><code>/transactions</code> – View transaction log</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h2>7. Documentation Practices</h2>
+    <p>All source files are documented using JavaDoc with special attention to:</p>
+    <ul>
+      <li>Business rules & security enforcement</li>
+      <li>Compliance with audit & PII regulations</li>
+      <li>Clear role separation across layers</li>
+    </ul>
+  </div>
+
+  <footer style="margin-top: 2rem; font-size: 0.9em; color: #888;">
+    &copy; 2025 Rafael Besparas – BesparasBank Architecture Document
+  </footer>
+
+</body>
+</html>
