@@ -2,8 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Transaction History - BesparasBank</title>
-    <link rel="stylesheet" href="/css/transactions.css">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="/css/profile.css">
     <link rel="stylesheet" href="/css/fragments.css">
     <style>
         header {
@@ -59,31 +59,21 @@
     </nav>
 </header>
 
-<div class="container">
-    <h2>Transaction History</h2>
-    <div class="table-wrapper">
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Date</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="transaction : ${transactions}">
-                <td th:text="${transaction.id}"></td>
-                <td th:text="${transaction.type}"></td>
-                <td th:text="${transaction.amount}"
-                    th:classappend="${transaction.type.contains('Transfer In') or transaction.type == 'DEPOSIT'} ? 'text-success' : 'text-danger'">
-                </td>
-                <td th:text="${transaction.timestamp}"></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <p class="center-link"><a href="/dashboard">← Back to Dashboard</a></p>
+<!-- Main Content -->
+<div class="profile-container">
+    <h2>Edit Your Profile</h2>
+    <form th:action="@{/profile/edit}" th:object="${profile}" method="post">
+        <label>First Name: <input type="text" th:field="*{firstName}" required /></label><br>
+        <label>Last Name: <input type="text" th:field="*{lastName}" required /></label><br>
+        <label>Date of Birth: <input type="date" th:field="*{dateOfBirth}" required /></label><br>
+        <label>National ID: <input type="text" th:field="*{nationalId}" required /></label><br>
+        <label>Address: <input type="text" th:field="*{address}" required /></label><br>
+        <label>Email: <input type="email" th:field="*{email}" required /></label><br>
+        <label>Phone: <input type="text" th:field="*{phone}" required /></label><br>
+        <label>Employment Status: <input type="text" th:field="*{employmentStatus}" /></label><br>
+        <label>Annual Income: <input type="number" step="0.01" th:field="*{annualIncome}" /></label><br>
+        <button type="submit">Save</button>
+    </form>
 </div>
 
 <footer>
