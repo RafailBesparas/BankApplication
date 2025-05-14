@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Notification Center</title>
+    <link rel="stylesheet" href="/css/notification-style.css" />
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Notification Center</h1>
+        <a href="/dashboard">Dashboard</a>
+        <div class="nav-user">
+
+            <span>👤 Rafael Besparas</span>
+            <span class="bell">🔔</span>
+        </div>
+    </header>
+
+    <div class="filters">
+        <button onclick="filterType('ALL')">All</button>
+        <button onclick="filterType('TRANSACTION')">Transaction</button>
+        <button onclick="filterType('ACCOUNT')">Account</button>
+        <button onclick="filterType('SECURITY')">Security</button>
+    </div>
+
+    <div id="notifications" class="notification-list">
+        <!-- Notifications will be dynamically inserted here -->
+    </div>
+</div>
+
+<script src="/js/notification-script.js"></script>
+</body>
+</html>

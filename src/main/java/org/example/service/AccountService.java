@@ -50,6 +50,13 @@ public class AccountService implements UserDetailsService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private NotificationService notificationService;
+
+    // Threshold for low balance in an account
+    private static final BigDecimal LOW_BALANCE_THRESHOLD = new BigDecimal("100.00");
+
+
     /**
      * Loads user credentials and roles for authentication.
      *
@@ -74,6 +81,10 @@ public class AccountService implements UserDetailsService {
                 account.getTransactions(),
                 Collections.singleton(new SimpleGrantedAuthority("USER"))
         );
+    }
+
+    public List<Transaction> searchTransactions(AccountModel account, String type, BigDecimal min, BigDecimal max, LocalDateTime from, LocalDateTime to) {
+        return transactionRepository.searchTransactions(account, type, min, max, from, to);
     }
 
     /**
@@ -129,10 +140,12 @@ public class AccountService implements UserDetailsService {
      * @throws RuntimeException if balance is insufficient
      */
     public void withdraw(AccountModel account, BigDecimal amount) {
+
         // If the user does not have enough money throw an error
         if (account.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient funds. You have no money at all! Go get some work done.");
         }
+
         // Subtract the withdrawal amount from the current balance
         account.setBalance(account.getBalance().subtract(amount));
         // Create a transaction record for the withdrawal
@@ -141,6 +154,16 @@ public class AccountService implements UserDetailsService {
         transactionRepository.save(tx);
         // Save the updated balance to the database
         accountRepository.save(account);
+
+        if (account.getBalance().compareTo(LOW_BALANCE_THRESHOLD) < 0) {
+            notificationService.sendNotification(
+                    account,
+                    "⚠️ Your account balance is below $" + LOW_BALANCE_THRESHOLD + ". Please consider topping up.",
+                    "ACCOUNT",
+                    "HIGH"
+            );
+        }
+
     }
 
     /**
@@ -169,6 +192,17 @@ public class AccountService implements UserDetailsService {
 
         // Update balances
         sender.setBalance(sender.getBalance().subtract(amount));
+
+        // Send a notification if the user has a low balance threshold
+        if (sender.getBalance().compareTo(LOW_BALANCE_THRESHOLD) < 0) {
+            notificationService.sendNotification(
+                    sender,
+                    "⚠️ Your account balance is below $" + LOW_BALANCE_THRESHOLD + " after transfer.",
+                    "ACCOUNT",
+                    "HIGH"
+            );
+        }
+
         // Subtract from the sender and add to the recipient
         recipient.setBalance(recipient.getBalance().add(amount));
 
@@ -176,6 +210,9 @@ public class AccountService implements UserDetailsService {
         Transaction txOut = new Transaction(amount, "Transfer Out to " + recipientUsername, LocalDateTime.now(), sender);
         // Create two transaction records one for the sender and one for the recipient
         Transaction txIn = new Transaction(amount, "Transfer In from " + senderUsername, LocalDateTime.now(), recipient);
+
+        notificationService.sendNotification(sender, "You transferred $" + amount + " to " + recipientUsername, "TRANSACTION", "MEDIUM");
+        notificationService.sendNotification(recipient, "You received $" + amount + " from " + senderUsername, "TRANSACTION", "MEDIUM");
 
         // Save both transaction records
         transactionRepository.save(txOut);
@@ -198,4 +235,5 @@ public class AccountService implements UserDetailsService {
     public List<Transaction> getTransactionHistory(AccountModel account) {
         return transactionRepository.findByAccount(account);
     }
+
 }

@@ -1,3 +1,8 @@
+netstat -ano | findstr :8080
+taskkill /PID 12345 /F
+
+
+
 Add to the project
 - Arc42 template for the backend documentation that captures these controllers and their roles in the system architecture
 - ClientProfileController governs the client-facing profile module. This is a compliance-critical class in banking applications since it deals with Personally Identifiable Information (PII).

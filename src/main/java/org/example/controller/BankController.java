@@ -1,17 +1,22 @@
 package org.example.controller;
 
 import org.example.model.AccountModel;
+import org.example.model.LoanApplication;
 import org.example.model.Transaction;
 import org.example.service.AccountService;
+import org.example.service.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -40,6 +45,11 @@ public class BankController {
     // Injects the AccountService to handle business logic like register, deposit, withdraw, etc.
     private AccountService accountService;
 
+    @GetMapping("/notification")
+    public String notificationPage() {
+        return "notification"; // This resolves to notification.html in /templates
+    }
+
     /**
      * GET login page
      *
@@ -50,6 +60,8 @@ public class BankController {
     public String login() {
         return "login";
     }
+
+
 
     /**
      * GET registration page
@@ -173,11 +185,19 @@ public class BankController {
      * @return transaction.html view
      */
     @GetMapping("/transactions")
-    public String viewTransactions(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String viewFilteredTransactions(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) BigDecimal min,
+            @RequestParam(required = false) BigDecimal max,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            Model model) {
+
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
-        // Get all the transactions for the particular account
-        model.addAttribute("transactions", accountService.getTransactionHistory(account));
-        return "transaction"; // must match the transaction.html file name
+        List<Transaction> results = accountService.searchTransactions(account, type, min, max, from, to);
+        model.addAttribute("transactions", results);
+        return "transaction";
     }
 
     /**
@@ -204,4 +224,46 @@ public class BankController {
 
         return "redirect:/dashboard";
     }
+
+    /// LOAN Application //////////////////////
+
+    @Controller
+    @RequestMapping("/loan")
+    public class LoanController {
+
+        @Autowired private LoanService loanService;
+        @Autowired private AccountService accountService;
+
+        @GetMapping("/apply")
+        public String showForm(Model model) {
+            model.addAttribute("loanApplication", new LoanApplication());
+            return "loan-apply";
+        }
+
+        @PostMapping("/apply")
+        public String apply(@AuthenticationPrincipal UserDetails userDetails,
+                            @ModelAttribute LoanApplication form,
+                            @RequestParam("document") MultipartFile file) {
+            AccountModel user = accountService.getByUsername(userDetails.getUsername());
+            String docPath = saveFile(file); // implement file storage
+            loanService.applyForLoan(user, form.getAmount(), form.getTermMonths(), form.getPurpose(), docPath);
+            return "redirect:/loan/status";
+        }
+
+        @GetMapping("/status")
+        public String status(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+            AccountModel user = accountService.getByUsername(userDetails.getUsername());
+            model.addAttribute("loans", loanService.getLoansByUser(user));
+            return "loan-status";
+        }
+
+
+
+        private String saveFile(MultipartFile file) {
+            // Save securely (encrypt path and store encrypted version)
+            return "/uploads/" + file.getOriginalFilename(); // example
+        }
+    }
+
+
 }

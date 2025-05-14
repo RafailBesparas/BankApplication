@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Apply for a Loan</title>
+    <link rel="stylesheet" th:href="@{/css/loan-apply.css}" />
+</head>
+<body>
+<div class="container">
+    <h2>Loan Application</h2>
+    <form th:action="@{/loan/apply}" method="post" enctype="multipart/form-data">
+        <label>Amount Requested</label>
+        <input type="number" name="amount" step="0.01" required />
+
+        <label>Purpose of Loan</label>
+        <input type="text" name="purpose" required />
+
+        <label>Term Duration (months)</label>
+        <input type="number" name="termMonths" required />
+
+        <label>Upload Supporting Documents</label>
+        <input type="file" name="document" accept="application/pdf,image/*" />
+
+        <button type="submit">Submit Application</button>
+    </form>
+</div>
+</body>
+</html>
