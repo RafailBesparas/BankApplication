@@ -1,118 +1,84 @@
-# 💳 BesparasBank – Enterprise-Ready Banking Web Application (Version 2)
+# 💳 BesparasBank – Spring Boot Banking Platform (v3)
 
-**BesparasBank** is a secure, modular, and fully documented Spring Boot-based web banking system built for enterprise-grade usage, development training, and compliance demonstration.
-
----
-
-## 🧭 Overview
-
-This application provides users with full banking capabilities including:
-
-- Registration and Login
-- Secure Dashboard with Balance Overview
-- Profile Management (PII-compliant)
-- Deposits, Withdrawals, Transfers
-- Transaction History
-- Thymeleaf-based UI with modular fragments
+**BesparasBank** is an enterprise-inspired banking web application built with Java 17, Spring Boot, and Thymeleaf. Version 3 introduces an even cleaner architecture, enhanced UI, improved transaction filtering, and future support for financial analytics and dashboard features.
 
 ---
 
-## 🧱 Layered Architecture
+## 🚀 Features at a Glance
+
+- 🔐 Secure user authentication (login/register)
+- 🏦 Core banking actions: deposit, withdraw, transfer
+- 📜 Filterable transaction history (type, date, range)
+- 👤 Editable client profiles (PII/GDPR-friendly)
+- 🔔 Notification system for key account events
+- 📊 Dashboard with last recipient + balance summary
+- 💻 Responsive modern UI (Thymeleaf + CSS)
+- ☕ Java 17 + Spring Boot layered architecture
+
+---
+
+## 🏗️ Layered Architecture
 
 ```
 org.example
-├── controller
-│   ├── BankController.java
-│   ├── AccountSummaryController.java
-│   └── ClientProfileController.java
-│
-├── service
-│   ├── AccountService.java
-│   └── ClientProfileService.java
-│
-├── repository
-│   ├── AccountRepository.java
-│   ├── ClientProfileRepository.java
-│   └── TransactionRepository.java
-│
-├── model
-│   ├── AccountModel.java
-│   ├── ClientProfile.java
-│   └── Transaction.java
-│
-├── config
-│   └── SecurityConfig.java
-│
-└── BankingApplication.java
+├── controller          // Web & REST endpoints
+├── service             // Business logic
+├── repository          // Data access via Spring Data JPA
+├── model               // Entity and domain classes
+├── config              // Security configuration
+└── BankingApplication  // Main entry point
 ```
 
 ---
 
-## 🧩 Key Features
+## 🔑 Security Highlights
 
-### 🔒 Security
-
-- Spring Security-based filter chain
-- BCrypt password hashing
-- Session-based authentication
-- Controller-level protection and login/logout routes
-
-### 📄 Profile & Account
-
-- View/edit user profile (ClientProfile)
-- Account linking and validation
-- GDPR-friendly annotations and secure storage
-
-### 💸 Transactions
-
-- Deposit, Withdraw, Transfer with validation
-- Bidirectional transaction logging (Transfer In/Out)
-- Transaction history in dashboard and reports
+- 🔒 Passwords secured with BCrypt
+- 🧩 Spring Security session-based auth
+- 🔐 Controller-level endpoint protection
+- ✅ CSRF and form validation support
 
 ---
 
-## 🎨 UI Pages (Thymeleaf)
+## 💼 Functional Modules
 
-| Page | Purpose |
-|------|---------|
-| `/login` | Secure login |
-| `/register` | New account creation |
-| `/dashboard` | Account overview + operations |
-| `/profile` | View profile |
-| `/profile/edit` | Edit profile |
-| `/account-summary` | Balance + recent transactions |
-| `/transactions` | Full history view |
+| Module         | Description                                       |
+|----------------|---------------------------------------------------|
+| Account        | Balance handling, transfers, and dashboard logic  |
+| Transactions   | Full searchable history with filters              |
+| Profile        | View/edit PII-compliant user info                 |
+| Notifications  | Event-triggered alerts (low balance, transfers)   |
+| Loans (WIP)    | Application, approval, and repayment plans        |
 
 ---
 
-## 📜 Documentation & Compliance
+## 🖥️ UI Pages
 
-Every class, method, and entity is documented with:
-
-- **JavaDoc annotations**
-- **Spring annotations**
-- **GDPR/PII notes**
-- **Security & Audit insights**
-- **Domain-specific comments for banking**
-
-All services follow **Separation of Concerns**, and repositories are designed to comply with **traceability, performance, and modularity**.
+| URL               | Description                            |
+|-------------------|----------------------------------------|
+| `/login`          | User authentication                    |
+| `/register`       | Account creation                       |
+| `/dashboard`      | Account overview, quick actions        |
+| `/transactions`   | History with filters                   |
+| `/account-summary`| High-level balance & transaction view  |
+| `/profile`        | View and edit user profile             |
 
 ---
 
 ## ⚙️ Technologies Used
 
-| Layer | Technology |
-|-------|------------|
-| Backend | Spring Boot |
-| Security | Spring Security |
-| ORM | Spring Data JPA |
-| Frontend | Thymeleaf, Bootstrap |
-| DB | H2/MySQL (configurable) |
-| Java Version | 17+ |
+| Layer     | Stack                             |
+|-----------|-----------------------------------|
+| Backend   | Java 17, Spring Boot 3.x          |
+| Security  | Spring Security                   |
+| ORM       | Spring Data JPA (Hibernate)       |
+| Frontend  | Thymeleaf + Bootstrap CSS         |
+| Database  | H2 (dev) / MySQL (prod-ready)     |
+| Messaging | Apache Kafka (optional module)    |
 
 ---
 
-## 🚀 Run Locally
+## 📦 Project Setup (Local)
 
 ```bash
 git clone https://github.com/yourusername/besparasbank.git
@@ -120,16 +86,34 @@ cd besparasbank
 ./mvnw spring-boot:run
 ```
 
-Open browser: [http://localhost:8080](http://localhost:8080)
+Access in browser: [http://localhost:8080](http://localhost:8080)
 
 ---
 
-## 👨‍💻 Developer
+## 📁 Sample Data & Testing
 
-Documented, built, and reviewed for production by **Rafael Besparas**
+- Preload sample transactions with SQL seed (optional)
+- Add test accounts via `/register`
+- Filter by type/date/amount via `/transactions`
 
 ---
 
-## 📌 License
+## 🧠 Next in Version 4 (Planned)
 
-MIT License – For educational, demonstration, and enterprise prototyping use.
+- Dashboard charts (Chart.js)
+- Account analytics & spending insights
+- Admin dashboard and approval workflows
+- Docker support with `docker-compose`
+
+---
+
+## 👨‍💻 Author
+
+Built with care and precision by **Rafael Besparas**  
+📧 [your.email@example.com](mailto:your.email@example.com)
+
+---
+
+## 📄 License
+
+MIT License – For learning, demonstration, and prototyping use.

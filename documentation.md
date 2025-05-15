@@ -1,30 +1,150 @@
-Add to the project
-- Arc42 template for the backend documentation that captures these controllers and their roles in the system architecture
-- ClientProfileController governs the client-facing profile module. This is a compliance-critical class in banking applications since it deals with Personally Identifiable Information (PII).
-- Must document this controller like a  software engineer working under GDPR, KYC, and auditing requirements.
-- How to add KYC Controlls
-- How to implement documentation based on standards like GDPR, PCI DSS, and ISO/IEC 27001
 
-### What is BCrypt?
-- BCrypt is a cryptographic hashing function specifically designed for securely hashing passwords. It’s widely used in web and enterprise applications to store passwords in a way that resists brute-force and rainbow table attacks 
 
-### Features of the BCrypt
-- One-Way Function: Once a password is hashed with BCrypt, it cannot be reversed back into the original password.
-- Salting: BCrypt automatically generates a random salt for each password, which is combined with the password before hashing. This ensures that even identical passwords produce different hashes.
-- Work Factor (Cost Parameter): BCrypt allows you to configure how computationally expensive the hashing process should be. This is known as the "cost factor", and it determines how many rounds of hashing are performed. The higher the cost, the slower the hash – which helps slow down brute-force attacks.
-- Adaptive: As computers become faster, you can increase the cost factor to make it harder for attackers to crack passwords.
-- Cross-Platform: Available in many languages like Java (Spring Security), Python (bcrypt library), and others.
+# 📘 BesparasBank – Developer Guide & Setup Documentation
 
-# Why use BCrypt
-- It protects against dictionary attacks, brute-force attacks, and precomputed rainbow tables.
-- It is more secure than older hashing algorithms like MD5 or SHA-1, which are fast and therefore easier for attackers to exploit.
+This guide explains how to set up and run the **BesparasBank** project, including the Spring Boot backend, Kafka for event messaging, and Docker containers for development services.
 
-###  2. Relevant Standards for Banking and Financial Applications
-- Standard/Guideline	Description	Applicability
-- PCI DSS	Payment Card Industry Data Security Standard	If you're handling credit/debit card data
-- ISO/IEC 27001	Information Security Management System (ISMS)	General info security management
-- ISO/IEC 20022	Messaging standard for financial services	For payment and transaction messaging systems
-- PSD2 / Open Banking API Security	EU directive on secure payments & access to bank accounts	If you're building APIs for third-party access
-- SOC 2	Controls for security, availability, and confidentiality	For SaaS or cloud-based systems
-- OWASP ASVS	Application Security Verification Standard	Technical checklist for app security (ideal for Spring Security apps)
-- BAFIN (Germany-specific)	Bundesanstalt für Finanzdienstleistungsaufsicht regulatory requirements	If your system operates in Germany under banking laws
+---
+
+## 🔧 Prerequisites
+
+Make sure you have the following tools installed:
+
+- [Java 17+](https://adoptopenjdk.net/)
+- [Maven](https://maven.apache.org/download.cgi)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- [Git](https://git-scm.com/)
+- Optional: [Postman](https://www.postman.com/) or `curl` for testing APIs
+
+---
+
+## 🚀 Run the Spring Boot Application
+
+```bash
+git clone https://github.com/yourusername/besparasbank.git
+cd besparasbank
+./mvnw spring-boot:run
+```
+
+Or with Maven installed globally:
+
+```bash
+mvn clean install
+mvn spring-boot:run
+```
+
+📍 Access the app: [http://localhost:8080](http://localhost:8080)
+
+---
+
+## 🐳 Start Docker for Kafka + Zookeeper
+
+You must have Docker running in the background.
+
+Create a file named `docker-compose.yml` in the root of the project with:
+
+```yaml
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+```
+
+Then run:
+
+```bash
+docker-compose up -d
+```
+
+✅ Kafka will be available at `localhost:9092`
+
+---
+
+## 📬 Verify Kafka is Running
+
+From terminal:
+
+```bash
+docker ps
+```
+
+Look for `kafka` and `zookeeper` containers.
+
+You can also use:
+
+```bash
+docker logs <kafka-container-id> --follow
+```
+
+To see real-time broker logs.
+
+---
+
+## 🛠️ Kafka Configuration in Spring Boot
+
+Make sure this is in `application.properties`:
+
+```properties
+spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.consumer.group-id=transaction-logger
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+```
+
+---
+
+## 📄 Common Endpoints
+
+| URL               | Description                       |
+|-------------------|-----------------------------------|
+| `/login`          | User login                        |
+| `/register`       | Create new user account           |
+| `/dashboard`      | View balance, last transfer       |
+| `/transactions`   | Full transaction history          |
+| `/profile`        | View or edit profile              |
+| `/account-summary`| Account + transaction overview    |
+
+---
+
+## 🧠 Troubleshooting Tips
+
+- 🛑 If Kafka shows "node -1 disconnected": Ensure Docker is running and Kafka container is using `localhost:9092`
+- ⚠️ If ports are already in use, stop conflicting services or change ports
+- 🐞 Spring Boot crash? Check for missing DB/Kafka config or invalid bean definitions
+
+---
+
+## 🧪 Sample Data (Optional)
+
+To test features quickly:
+1. Register a user
+2. Login and deposit money
+3. Create transactions
+4. View filters and account summary
+
+---
+
+## 👨‍💻 Maintainer
+
+Developed by **Rafael Besparas**  
+rafaelbesparas@outlook.com
+
+MIT Licensed – Safe to clone, learn, and extend.

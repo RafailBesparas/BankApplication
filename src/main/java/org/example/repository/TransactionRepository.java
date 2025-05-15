@@ -3,7 +3,11 @@ package org.example.repository;
 import org.example.model.AccountModel;
 import org.example.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -41,4 +45,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * @return a list of {@link Transaction} records
      */
     List<Transaction> findByAccount(AccountModel account);
+
+    @Query("SELECT t FROM Transaction t WHERE t.account = :account " +
+            "AND (:type IS NULL OR t.type = :type) " +
+            "AND (:minAmount IS NULL OR t.amount >= :minAmount) " +
+            "AND (:maxAmount IS NULL OR t.amount <= :maxAmount) " +
+            "AND (:fromDate IS NULL OR t.timestamp >= :fromDate) " +
+            "AND (:toDate IS NULL OR t.timestamp <= :toDate)")
+    List<Transaction> searchTransactions(
+            @Param("account") AccountModel account,
+            @Param("type") String type,
+            @Param("minAmount") BigDecimal minAmount,
+            @Param("maxAmount") BigDecimal maxAmount,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
+
 }
