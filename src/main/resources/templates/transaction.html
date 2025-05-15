@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Transaction History - BesparasBank</title>
+    <title>Transactions - BesparasBank</title>
     <link rel="stylesheet" href="/css/transactions.css">
     <script defer src="/js/transactions.js"></script>
 </head>
@@ -20,7 +20,6 @@
 <main class="container">
     <h2>Transaction History</h2>
 
-    <!-- Filter Form -->
     <form method="get" class="filter-form">
         <input type="datetime-local" name="from" th:value="${param.from}" placeholder="From Date">
         <input type="datetime-local" name="to" th:value="${param.to}" placeholder="To Date">
@@ -37,7 +36,6 @@
         <a href="/transactions" class="reset-link">Reset</a>
     </form>
 
-    <!-- Transaction Table -->
     <div class="table-wrapper">
         <table>
             <thead>
@@ -52,8 +50,7 @@
             <tr th:each="transaction : ${transactions}">
                 <td th:text="${transaction.id}"></td>
                 <td th:text="${transaction.type}"></td>
-                <td th:text="${transaction.amount}"
-                    th:classappend="${transaction.type.contains('Transfer In') or transaction.type == 'DEPOSIT'} ? 'text-success' : 'text-danger'"></td>
+                <td th:text="${transaction.amount}" th:classappend="${transaction.type.contains('Transfer In') or transaction.type == 'DEPOSIT'} ? 'text-success' : 'text-danger'"></td>
                 <td th:text="${#temporals.format(transaction.timestamp, 'yyyy-MM-dd HH:mm')}"></td>
             </tr>
             </tbody>
@@ -61,7 +58,7 @@
     </div>
 
     <div class="center-link">
-        <a href="/dashboard">← Back to Dashboard</a>
+        <a href="/dashboard">&larr; Back to Dashboard</a>
     </div>
 </main>
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BesparasBank – Architecture Overview</title>
+  <title>BesparasBank – Architecture Overview (v3)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -29,95 +29,103 @@
 </head>
 <body>
 
-  <h1>BesparasBank – Software Architecture Overview</h1>
+<h1>BesparasBank – Software Architecture Overview (Version 3)</h1>
 
-  <div class="box">
-    <h2>1. Purpose</h2>
-    <p>This document describes the high-level software architecture of <strong>BesparasBank</strong>, a secure online banking platform built using Spring Boot. It outlines the structure, responsibilities, and integration of core components.</p>
-  </div>
+<div class="box">
+  <h2>1. Purpose</h2>
+  <p>This document describes the high-level architecture of <strong>BesparasBank</strong>, a secure banking platform built with Spring Boot. It outlines the structure, responsibilities, and modules introduced or improved in Version 3.</p>
+</div>
 
-  <div class="box">
-    <h2>2. Technology Stack</h2>
-    <ul>
-      <li><strong>Backend:</strong> Java 17, Spring Boot, Spring Security</li>
-      <li><strong>Frontend:</strong> Thymeleaf, Bootstrap, HTML5/CSS</li>
-      <li><strong>Database:</strong> H2 / MySQL (via Spring Data JPA)</li>
-      <li><strong>Security:</strong> BCrypt password hashing, authentication providers</li>
-    </ul>
-  </div>
+<div class="box">
+  <h2>2. Technology Stack</h2>
+  <ul>
+    <li><strong>Backend:</strong> Java 17, Spring Boot 3.x, Spring Security</li>
+    <li><strong>Frontend:</strong> Thymeleaf, Bootstrap 5, HTML5/CSS3</li>
+    <li><strong>Database:</strong> H2 (dev) / MySQL (prod)</li>
+    <li><strong>Messaging (Optional):</strong> Apache Kafka</li>
+  </ul>
+</div>
 
-  <div class="box">
-    <h2>3. System Layers</h2>
-    <pre><code>org.example
+<div class="box">
+  <h2>3. System Layers</h2>
+  <pre><code>org.example
 ├── controller
 │   ├── BankController.java
 │   ├── AccountSummaryController.java
-│   └── ClientProfileController.java
+│   ├── ClientProfileController.java
+│   └── NotificationController.java
 │
 ├── service
 │   ├── AccountService.java
-│   └── ClientProfileService.java
+│   ├── ClientProfileService.java
+│   ├── NotificationService.java
+│   └── LoanService.java
 │
 ├── repository
 │   ├── AccountRepository.java
 │   ├── ClientProfileRepository.java
-│   └── TransactionRepository.java
+│   ├── TransactionRepository.java
+│   └── NotificationRepository.java
 │
 ├── model
 │   ├── AccountModel.java
 │   ├── ClientProfile.java
-│   └── Transaction.java
+│   ├── Transaction.java
+│   └── Notification.java
 │
 ├── config
 │   └── SecurityConfig.java
 │
 └── BankingApplication.java
 </code></pre>
-  </div>
+</div>
 
-  <div class="box">
-    <h2>4. Key Components</h2>
-    <ul>
-      <li><strong>AccountService</strong> – Handles registration, deposit, withdrawal, and transfer logic.</li>
-      <li><strong>SecurityConfig</strong> – Manages authentication, authorization, and password security.</li>
-      <li><strong>ClientProfileService</strong> – Manages personal user data (PII) with compliance awareness.</li>
-      <li><strong>Transaction</strong> – Represents immutable financial records, used for auditing.</li>
-    </ul>
-  </div>
+<div class="box">
+  <h2>4. Key Components</h2>
+  <ul>
+    <li><strong>AccountService</strong> – Handles core banking logic: deposit, withdrawal, transfer.</li>
+    <li><strong>NotificationService</strong> – Sends alerts on low balance, transfers, and system messages.</li>
+    <li><strong>ClientProfileService</strong> – Manages user identity and PII information securely.</li>
+    <li><strong>LoanService</strong> – (In Progress) Supports loan application and repayment schedule.</li>
+    <li><strong>SecurityConfig</strong> – Configures Spring Security with password hashing, login/logout flow.</li>
+  </ul>
+</div>
 
-  <div class="box">
-    <h2>5. Security Considerations</h2>
-    <ul>
-      <li>All credentials are hashed using <code>BCrypt</code>.</li>
-      <li>All sensitive endpoints are protected using Spring Security annotations and session management.</li>
-      <li>Client PII is separated into <code>ClientProfile</code> with limited exposure.</li>
-    </ul>
-  </div>
+<div class="box">
+  <h2>5. Security Considerations</h2>
+  <ul>
+    <li>BCrypt used for password encryption.</li>
+    <li>Access to endpoints controlled via Spring Security filters.</li>
+    <li>PII stored in a separate model with limited access exposure.</li>
+    <li>Session-based authentication and CSRF protection enabled.</li>
+  </ul>
+</div>
 
-  <div class="box">
-    <h2>6. UI Pages</h2>
-    <ul>
-      <li><code>/login</code> – User authentication</li>
-      <li><code>/register</code> – Create account</li>
-      <li><code>/dashboard</code> – Operations overview</li>
-      <li><code>/profile</code> – View user information</li>
-      <li><code>/transactions</code> – View transaction log</li>
-    </ul>
-  </div>
+<div class="box">
+  <h2>6. UI Pages</h2>
+  <ul>
+    <li><code>/login</code> – User login page</li>
+    <li><code>/register</code> – New account registration</li>
+    <li><code>/dashboard</code> – User's financial summary + last actions</li>
+    <li><code>/transactions</code> – Filterable transaction history</li>
+    <li><code>/profile</code> – View/edit user info</li>
+    <li><code>/account-summary</code> – Overview of accounts</li>
+  </ul>
+</div>
 
-  <div class="box">
-    <h2>7. Documentation Practices</h2>
-    <p>All source files are documented using JavaDoc with special attention to:</p>
-    <ul>
-      <li>Business rules & security enforcement</li>
-      <li>Compliance with audit & PII regulations</li>
-      <li>Clear role separation across layers</li>
-    </ul>
-  </div>
+<div class="box">
+  <h2>7. Documentation Practices</h2>
+  <p>All classes and services are documented with JavaDoc, including:</p>
+  <ul>
+    <li>Security annotations and endpoint access details</li>
+    <li>Compliance-aware comments for PII and auditing</li>
+    <li>Clear business rule and purpose documentation</li>
+  </ul>
+</div>
 
-  <footer style="margin-top: 2rem; font-size: 0.9em; color: #888;">
-    &copy; 2025 Rafael Besparas – BesparasBank Architecture Document
-  </footer>
+<footer style="margin-top: 2rem; font-size: 0.9em; color: #888;">
+  &copy; 2025 Rafael Besparas – BesparasBank Architecture v3
+</footer>
 
 </body>
 </html>

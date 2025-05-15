@@ -1,5 +1,6 @@
 package org.example.service;
 
+import org.example.kafka.TransactionEventProducer;
 import org.example.model.AccountModel;
 import org.example.model.Transaction;
 import org.example.repository.AccountRepository;
@@ -41,6 +42,9 @@ public class AccountService implements UserDetailsService {
     // Automatically injects the dependencies needed and the Account Repository to perform database operations on accounts
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private TransactionEventProducer kafkaProducer;
 
     // Injects the Transaction repository to store and fetch transaction records
     @Autowired
@@ -125,6 +129,9 @@ public class AccountService implements UserDetailsService {
         account.setBalance(account.getBalance().add(amount));
         // Create a transaction record for the deposit
         Transaction tx = new Transaction(amount, "DEPOSIT", LocalDateTime.now(), account);
+
+        kafkaProducer.sendTransactionEvent("Deposit: $" + amount + " by user " + account.getUsername());
+
         // Save the transaction to the database
         transactionRepository.save(tx);
         // Update the account with the new balance
@@ -154,6 +161,8 @@ public class AccountService implements UserDetailsService {
         transactionRepository.save(tx);
         // Save the updated balance to the database
         accountRepository.save(account);
+
+        kafkaProducer.sendTransactionEvent("Withdraw: $" + amount + " by user " + account.getUsername());
 
         if (account.getBalance().compareTo(LOW_BALANCE_THRESHOLD) < 0) {
             notificationService.sendNotification(
@@ -189,6 +198,8 @@ public class AccountService implements UserDetailsService {
         if (sender.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient funds for transfer.");
         }
+
+        kafkaProducer.sendTransactionEvent("Transfer: $" + amount + " from " + senderUsername + " to " + recipientUsername);
 
         // Update balances
         sender.setBalance(sender.getBalance().subtract(amount));

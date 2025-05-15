@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Settings - BesparasBank</title>
+    <link rel="stylesheet" href="/css/settings.css">
+    <script defer src="/js/settings.js"></script>
+</head>
+<body>
+
+<header class="nav-header">
+    <div class="logo">BesparasBank</div>
+    <nav class="nav-links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/profile">Profile</a>
+        <a href="/logout">Logout</a>
+    </nav>
+</header>
+
+<main class="container">
+    <h2>Account Settings</h2>
+
+    <form method="post" th:object="${settings}" class="settings-form">
+
+        <!-- Security -->
+        <section>
+            <h3>🔐 Security Settings</h3>
+            <label>
+                <input type="checkbox" th:field="*{twoFactorEnabled}"/>
+                Enable Two-Factor Authentication (2FA)
+            </label>
+        </section>
+
+        <!-- Communication Preferences -->
+        <section>
+            <h3>📧 Communication Preferences</h3>
+            <label><input type="checkbox" th:field="*{transactionAlerts}"/> Transaction Alerts</label>
+            <label><input type="checkbox" th:field="*{securityAlerts}"/> Security Alerts</label>
+            <label><input type="checkbox" th:field="*{monthlyStatements}"/> Monthly Statements</label>
+        </section>
+
+        <!-- Display Preferences -->
+        <section>
+            <h3>🖥️ Interface Preferences</h3>
+            <label>
+                Theme:
+                <select th:field="*{theme}">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </label>
+            <label>
+                Time Zone:
+                <input type="text" th:field="*{timeZone}" placeholder="e.g., Europe/Berlin"/>
+            </label>
+            <label>
+                Number Format:
+                <input type="text" th:field="*{numberFormat}" placeholder="e.g., 1,234.56"/>
+            </label>
+        </section>
+
+        <!-- Locale -->
+        <section>
+            <h3>🌐 Language & Currency</h3>
+            <label>
+                Preferred Language:
+                <input type="text" th:field="*{preferredLanguage}" placeholder="e.g., en, de"/>
+            </label>
+            <label>
+                Preferred Currency:
+                <input type="text" th:field="*{preferredCurrency}" placeholder="e.g., USD, EUR"/>
+            </label>
+        </section>
+
+        <div class="form-actions">
+            <button type="submit">💾 Save Changes</button>
+            <a href="/dashboard" class="cancel-btn">Cancel</a>
+        </div>
+    </form>
+</main>
+
+<footer>
+    &copy; 2025 BesparasBank. All rights reserved.
+</footer>
+
+</body>
+</html>
