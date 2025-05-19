@@ -2,13 +2,22 @@ package org.example.model;
 
 import jakarta.persistence.*;
 
+/**
+ * Entity representing configurable user preferences for security, communication, and interface.
+ * Each UserSettings entry is associated with one account only (one-to-one mapping).
+ */
 @Entity
 public class UserSettings {
 
+    /** Primary key for the UserSettings table */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * One-to-one relationship with AccountModel.
+     * Each account has exactly one UserSettings entry.
+     */
     @OneToOne
     @JoinColumn(name = "account_id")
     private AccountModel account;

@@ -5,29 +5,55 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity
+
+/**
+ * Entity representing a loan application submitted by an account holder.
+ * Stores key loan details such as amount, term, interest, status, and repayment plan.
+ */
+@Entity // Marks this class as a JPA entity for ORM mapping
 public class LoanApplication {
 
+    // Primary key for the loan application
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long loanId;
 
+    // Relationship to the applicant (linked account model)
+    // One User must have one Account and can have one Account
     @ManyToOne
     @JoinColumn(name = "account_id")
     private AccountModel applicant;
 
+    // Requested loan amount
     private BigDecimal amount;
+
+    // Duration of the loan in months
     private Integer termMonths;
+
+    // Interest rate applied to the loan
     private Double interestRate;
+
+    // Purpose of the loan (e.g., Education, Home, Business)
     private String purpose;
+
+    // Application status: PENDING, APPROVED, or REJECTED
     private String status; // PENDING, APPROVED, REJECTED
+
+    // Date of application submission
     private LocalDate applicationDate;
+
+    // Name of the approver (admin or system)
     private String approvedBy;
+
+    // Any notes or comments about the loan decision
     private String notes;
 
+    // Repayment schedule entries associated with this loan
+    // One loan can have multiple Repayment Schedules
     @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL)
     private List<RepaymentSchedule> repaymentSchedules;
 
+    // Optional path to uploaded loan documents (PDF, DOC, etc.)
     private String documentPath; // optional
 
     // Getters & Setters
