@@ -21,17 +21,14 @@ import java.util.List;
 
 /**
  * Main controller for handling core banking operations such as:
- * registration, authentication, dashboard access, deposits, withdrawals, transfers, and transaction history.
+ * registration, login, dashboard rendering, deposits, withdrawals,
+ * transfers, and transaction filtering.
  *
- * <p>
- * This controller bridges the user interface with backend logic for customer-facing features.
- * All operations are secured via Spring Security and routed based on user authentication status.
+ * <p>This controller serves as the entry point for user-facing banking features.
+ * It interfaces with the AccountService for core logic and manages state via Spring's Model and Security context.</p>
  *
- * <b>Security Note:</b> Every route here must be protected via SecurityConfig. Sensitive operations (e.g., transfer)
- * are executed based on authenticated principals only.
- *
- * <b>Audit Note:</b> Transactions are persisted and can be queried per user for history and compliance.
- * </p>
+ * <b>Security:</b> All methods rely on authenticated access and are protected via Spring Security.<br>
+ * <b>Compliance:</b> Transactions processed are persisted for auditing and reporting.
  *
  * @author Rafael Besparas
  */
@@ -45,6 +42,7 @@ public class BankController {
     // Injects the AccountService to handle business logic like register, deposit, withdraw, etc.
     private AccountService accountService;
 
+    // Display the notification Center the feature where the user sees the notifications
     @GetMapping("/notification")
     public String notificationPage() {
         return "notification"; // This resolves to notification.html in /templates
@@ -90,23 +88,21 @@ public class BankController {
         return "redirect:/login";
     }
 
-    /**
-     * Main dashboard after login
-     *
-     * @param userDetails           authenticated user
-     * @param model                 Spring model
-     * @param lastTransferRecipient optionally injected via flash attribute
-     * @return dashboard.html with balance, profile, and recent activity
-     */
+
     // This is the part where for the logged in user this application shows the dashboard
+    //Shows balance, transaction history, last transfer recipient, and optional profile info.
     @GetMapping("/dashboard")
-    public String dashboard(@AuthenticationPrincipal UserDetails userDetails,
+    public String dashboard(
+            // Get the current user information
+            @AuthenticationPrincipal UserDetails userDetails,
+                            // Container to pass the data from the backend - to the HTML
                             Model model,
                             //    // Reads also the last transfer from the recipient to be able to show the last transfer details
                             @ModelAttribute("lastTransferRecipient") String lastTransferRecipient) {
 
-        //Gets the users account and adds it and the transaction history to the page.
+        //Find the account linked with the user
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
+        // Add account and transactions to my model
         model.addAttribute("account", account);
         model.addAttribute("transactions", accountService.getTransactionHistory(account));
 
@@ -129,16 +125,13 @@ public class BankController {
         return "dashboard";
     }
 
-    /**
-     * Process deposit requests from dashboard
-     *
-     * @param userDetails user performing the deposit
-     * @param amount      deposit amount
-     * @return redirect to dashboard
-     */
+    //Process deposit requests from dashboard
     @PostMapping("/deposit")
     // when the user precess the deposit button take the amount to the balance of the user and go back to the dashboard
-    public String deposit(@AuthenticationPrincipal UserDetails userDetails,
+    public String deposit(
+            // Get from the currently logged user the data
+            @AuthenticationPrincipal UserDetails userDetails,
+                          // Get the amount from the current logged user
                           @RequestParam BigDecimal amount) {
         // Get the user details from the model in order to update the deposit to the right account
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
@@ -148,16 +141,9 @@ public class BankController {
         return "redirect:/dashboard";
     }
 
-    /**
-     * Process withdrawals, handles overdraft errors.
-     *
-     * @param userDetails authenticated user
-     * @param amount      withdrawal amount
-     * @param model       model to store error (if any)
-     * @return redirect to dashboard regardless of success/failure
-     */
+    //Process withdrawals also handle the overdraft errors.
     @PostMapping("/withdraw")
-    // When the user uses the withdrawal form subtract the money from the account
+    // When the user uses the withdrawal form, subtract the money from the account
     // If there is not enough money throw an error
     public String withdraw(@AuthenticationPrincipal UserDetails userDetails,
                            @RequestParam BigDecimal amount,
@@ -167,7 +153,7 @@ public class BankController {
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
         // use the method try and catch
         try {
-            // From the account service service use the withdraw method and subtract the amount the user wants
+            // From the account service use the withdraw method and subtract the amount the user wants
             accountService.withdraw(account, amount);
          // throw a runtime error if there is a failure on the withdrawal
         } catch (RuntimeException e) {
@@ -177,87 +163,123 @@ public class BankController {
         return "redirect:/dashboard";
     }
 
-    /**
-     * View transaction history
-     *
-     * @param userDetails current user
-     * @param model       Spring model
-     * @return transaction.html view
-     */
+    //View transaction history
+    // When the user opens the transactions we also show him the filters in the transaction HTML
     @GetMapping("/transactions")
     public String viewFilteredTransactions(
+            // Get from the currently logged user the data
             @AuthenticationPrincipal UserDetails userDetails,
+
+            // Get from the user the type
             @RequestParam(required = false) String type,
+            // Get from the user the min
             @RequestParam(required = false) BigDecimal min,
+            // Get from the user the max
             @RequestParam(required = false) BigDecimal max,
+            // Get from the user the Local Date time
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            // Get from the user the Local date time to
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            // Add the data to the model
             Model model) {
 
+        // Get the current user and link him to his account
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
+        // Search matching transactions based on the provided filters
         List<Transaction> results = accountService.searchTransactions(account, type, min, max, from, to);
+        // Add the results to the model transactions and display them to HTML page
         model.addAttribute("transactions", results);
+        // Return the view transactions
         return "transaction";
     }
 
     /**
      * Transfer funds to another user by username.
-     *
-     * @param userDetails        authenticated user (sender)
-     * @param recipient          recipient's username
-     * @param amount             transfer amount
-     * @param redirectAttributes flash attributes to show result
-     * @return redirect to dashboard
      */
     @PostMapping("/transfer")
     // the authenticated principal is used to access an authenticated user directly in the controller methdo
-    public String transfer(@AuthenticationPrincipal UserDetails userDetails,
+    public String transfer(
+            // Get from the currently logged user the data
+            @AuthenticationPrincipal UserDetails userDetails,
+                           // Get from the user the recipient
                            @RequestParam String recipient,
+                           // Get from the user the amount
                            @RequestParam BigDecimal amount,
+                           // Send temporary data with also a request to redirect the page
                            RedirectAttributes redirectAttributes) {
         try {
+            // Try to transfer the specified amount from the logged-in user to the recipient
             accountService.transfer(userDetails.getUsername(), recipient, amount);
+            // If the transaction works remember the recipient name and pass it to the dashboard
             redirectAttributes.addFlashAttribute("lastTransferRecipient", recipient);
         } catch (RuntimeException e) {
+            // If something goes wrong (e.g. not enough money),
+            // it catches the error and sends the error message to the dashboard instead.
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
 
+        // It redirects the user to the dashboard view.
         return "redirect:/dashboard";
     }
 
-    /// LOAN Application //////////////////////
+    /// LOAN Application ////////////////////// controller embedded in the bank controller
 
+    // It is a controller on its own but I created it here and then I did not want to move it
     @Controller
+    // When the user is in the loan page run the code below
     @RequestMapping("/loan")
+    // Class that will handle the loans from the user
     public class LoanController {
 
+        // Auto Inject the dependencies needed for the loan service
         @Autowired private LoanService loanService;
+
+        // Get the account data, inject the dependencies from the account service
         @Autowired private AccountService accountService;
 
+        // Display the loan application form to the user
         @GetMapping("/apply")
         public String showForm(Model model) {
+            // Add a blank Loan Application object to the model
             model.addAttribute("loanApplication", new LoanApplication());
+            // Return the Thymleaf template for a loan application
             return "loan-apply";
         }
 
+        // Handles the submission of the loan form
+        // Captures the form fields and an uploaded document, processes the loan request,
+        // redirects the user to the loan status page.
         @PostMapping("/apply")
-        public String apply(@AuthenticationPrincipal UserDetails userDetails,
+        public String apply(
+                // Get the current logged in user details
+                @AuthenticationPrincipal UserDetails userDetails,
+                            // Fill the form from the provided user input.
                             @ModelAttribute LoanApplication form,
+                            // Reads the uploaded file
                             @RequestParam("document") MultipartFile file) {
+            // Retrieve the account information of the logged in user
             AccountModel user = accountService.getByUsername(userDetails.getUsername());
+            // Save the uploaded file
             String docPath = saveFile(file); // implement file storage
+            // Call the loan service to create a new loan application entry
             loanService.applyForLoan(user, form.getAmount(), form.getTermMonths(), form.getPurpose(), docPath);
-            return "redirect:/loan/status";
+            return "redirect:/loan/status"; // show the user the page loan-status
         }
 
+        // When the user is in the loan-status page provide this code
         @GetMapping("/status")
-        public String status(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+
+        public String status(
+                // Get the current logged-in user details
+                @AuthenticationPrincipal UserDetails userDetails,
+                Model model) {
+            //Retrieve the user's account from the username
             AccountModel user = accountService.getByUsername(userDetails.getUsername());
+            //Fetch all loans associated with the user
             model.addAttribute("loans", loanService.getLoansByUser(user));
+            // Provide the loan-status.html view to the user's loan data
             return "loan-status";
         }
-
-
 
         private String saveFile(MultipartFile file) {
             // Save securely (encrypt path and store encrypted version)

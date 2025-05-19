@@ -13,23 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
-/**
- * Controller responsible for rendering the account summary page.
- * <p>
- * Accessible only to authenticated users, this controller loads the current user's
- * account data and recent transactions to be displayed on the summary dashboard.
- * <p>
- * <b>Security:</b> All requests to this controller are protected by Spring Security.
- * CSRF, authentication, and role-based access are enforced globally in {@code SecurityConfig}.
- *
- * <p>
- * <b>Compliance:</b> Designed to support banking-grade user data handling. Avoids exposing
- * sensitive information such as passwords or internal IDs in the frontend.
- *
- * @author Rafael Besparas
- */
 
-// This marks the class here from the Spring MVC design Patter,  as controller which handles the http requests and reutrns views
+// Controller which is responsible for the account summary page. This controller loads the current user account data
+    // Recent transactions and we want them to be displayed on the summary dashboard
+// This marks the class here from the Spring MVC design Patter,  as controller which handles the http requests and returns views
 @Controller
 // Maps all requests that starts with /account-summary to this controller
 @RequestMapping("/account-summary")
