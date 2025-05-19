@@ -1,4 +1,8 @@
+
+
 # 💳 BesparasBank – Spring Boot Banking Platform (v3)
+
+Yes I have used Chatgtp to help me coding, no I do not understand all I am doing 100%. Yes I am exposing myself to more hardcore coding every day.
 
 **BesparasBank** is an enterprise-inspired banking web application built with Java 17, Spring Boot, and Thymeleaf. Version 3 introduces an even cleaner architecture, enhanced UI, improved transaction filtering, and future support for financial analytics and dashboard features.
 
