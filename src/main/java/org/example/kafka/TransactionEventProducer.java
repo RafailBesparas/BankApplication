@@ -1,32 +1,25 @@
 package org.example.kafka;
 
-// Import necessary Spring and Kafka components
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-/**
- * Service class responsible for producing (publishing) transaction events to a Kafka topic.
- * It uses Spring's KafkaTemplate to send messages to the "transaction-events" topic.
- */
-@Service // Registers this class as a Spring-managed service bean
+
+// This class sends the message to a Kafka topic called transaction events
+    // It is used in order to publish a message to new transaction events
+@Service // Register this class as a Spring Managed service component
 public class TransactionEventProducer {
 
-    // Name of the Kafka topic to which transaction events will be published
+    // The name of the Kafka topic
     private static final String TOPIC = "transaction-events";
 
-    // KafkaTemplate is used to send messages to Kafka
+    // This object is used to send messages to Kafka
     @Autowired
-    //Automatically injects the KafkaTemplate bean configured in the application
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaTemplate<String, String> kafkaTemplate; // Injects a kafka template for messaging publishing
 
-    /**
-     * Sends a transaction event message to the Kafka topic.
-     *
-     * @param message the message content to be sent to the topic
-     */
-    public void sendTransactionEvent(String message)
-    {
-        kafkaTemplate.send(TOPIC, message); // Sends the message to the "transaction-events" topic
+    // This method sends a message to the Kafka topic and the message I want to send
+    public void sendTransactionEvent(String message) {
+        // Send the message to the topic
+        kafkaTemplate.send(TOPIC, message);
     }
 }

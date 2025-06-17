@@ -1,93 +1,63 @@
 package org.example.model;
 
-// JPA annotations for ORM mapping
 import jakarta.persistence.*;
-// Timestamp for notification creation
 import java.time.LocalDateTime;
 
 /**
- * Entity representing a notification sent to a user.
- * Notifications can relate to account events, transactions, promotions, or security alerts.
+ * This class represents a notification sent to a user.
+ * Examples: a login alert, a deposit alert, or a promotional message.
  */
-@Entity // Marks this class as a JPA entity for persistence
+// This class is a representation of a notification sent to a user
+    // Example is a login alert, deposit alert, promotional message
+@Entity // Marks this as a JPA entity (mapped to a table in the database).
 public class Notification {
 
-    // Primary key for the notification record
+    // Unique ID for the notification (auto-generated)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // User (account) associated with the notification
-    // One user account can be associated with multiple notifications
-    @ManyToOne
-    @JoinColumn(name = "account_id")
+    // The user who receives this notification
+    @ManyToOne // Many notifications belong to one user
+    @JoinColumn(name = "account_id") // Foreign key column in the database
     private AccountModel user;
 
-    // Notification message content
+    // The message shown to the user
     private String message;
-    // Type of message
-    private String type; // SECURITY, TRANSACTION, ACCOUNT, PROMOTION
 
-    // Time when the notification was created or sent
+    // Type of notification (example: SECURITY, TRANSACTION)
+    private String type;
+
+    // When the notification was created
     private LocalDateTime timestamp;
-    // Flag to indicate if the notification has been read
+
+    // Whether the user has already read this notification
+    @Column(name = "is_read")
     private boolean read;
-    // Priority level of the notification
-    private String priority; // LOW, MEDIUM, HIGH
 
-    public Long getId() {
-        return id;
-    }
+    // Notification priority: LOW, MEDIUM, or HIGH
+    private String priority;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    // ===== Getters and Setters =====
 
-    public AccountModel getUser() {
-        return user;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setUser(AccountModel user) {
-        this.user = user;
-    }
+    public AccountModel getUser() { return user; }
+    public void setUser(AccountModel user) { this.user = user; }
 
-    public String getMessage() {
-        return message;
-    }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 
-    public String getType() {
-        return type;
-    }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+    public boolean isRead() { return read; }
+    public void setRead(boolean read) { this.read = read; }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public boolean isRead() {
-        return read;
-    }
-
-    public void setRead(boolean read) {
-        this.read = read;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
-    }
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 }

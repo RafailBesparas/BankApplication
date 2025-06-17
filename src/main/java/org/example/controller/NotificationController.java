@@ -11,38 +11,46 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// Tells spring to handle HTTP API requests and responses should be JSON
-@RestController
-//  sets the base path for all endpoints in this controller.
-//  So every method here will start with /notifications
-@RequestMapping("/notifications")
+/**
+ * This controller handles notification-related actions like:
+ * - Viewing all notifications
+ * - Marking one as read
+ * - Marking all as read
+ */
+
+// Use the rest controller to handle the notification related actions and return JSON data
+    // - View all notification
+    // - Marking one as read
+    // - Marking all as read
+@RestController // this returns JSON data instead of views
+@RequestMapping("/notifications") // endpoint /notifications
 public class NotificationController {
 
-    // With these two fields I let the controller communicate with my business logic classes
-    //@Autowired tells Spring to automatically give you an instance of these classes so you can use their methods
-    @Autowired private AccountService accountService;
-    @Autowired private NotificationService notificationService;
+    // Fetch the current users account
+    @Autowired
+    private AccountService accountService;
 
-    // Handles all the get requests to /notifications
+    // Inject the Notifications service to handle notification business logic
+    @Autowired
+    private NotificationService notificationService;
+
+    // Use the get logic to get notifications for the logged in user
     @GetMapping
-    // @AuthenticationPrincipal tells Spring to inject the currently logged-in user (the one making the request).
-    // Return a list of user notifications
     public List<Notification> getNotifications(@AuthenticationPrincipal UserDetails userDetails) {
-        // Use the username to fetch the actual user data from the database
+        // Find the account of the current user
         AccountModel user = accountService.getByUsername(userDetails.getUsername());
-        // Ask the NotificationService to get this user's notifications and return them as the response
+
+        // Return all notifications for this user
         return notificationService.getUserNotifications(user);
     }
 
-    // Handles the Patch request
-    // @PatchMapping means "make a small change" (in this case, marking one notification as read).
+    // Use the  mapping in order to mark a single notification as read based on its id and user choice
     @PatchMapping("/{id}/read")
     public void markAsRead(@PathVariable Long id) {
-        // Tell the service to mark that specific notification as read
         notificationService.markAsRead(id);
     }
 
-    // This handles a PATCH request to /notifications/read-all
+    // Use mapping to mark all notifications as read for this current user
     @PatchMapping("/read-all")
     public void markAllAsRead(@AuthenticationPrincipal UserDetails userDetails) {
         AccountModel user = accountService.getByUsername(userDetails.getUsername());

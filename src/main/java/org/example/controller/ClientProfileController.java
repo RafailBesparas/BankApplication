@@ -11,113 +11,80 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Controller for managing user profile data (ClientProfile).
- * <p>
- * This controller supports profile viewing and editing functionalities.
- * All operations are scoped to the currently authenticated user and protected
- * under Spring Security policies defined in {org.example.config.SecurityConfig}.
- *
- * <b>GDPR Note:</b> This component handles sensitive client PII, including email, address,
- * phone, and financial details. All access and updates must be logged and restricted.
- *
- * <b>Usage:</b> Mapped under the route { /profile}, used by client dashboard and settings.
- *
- * @author Rafael
- */
-
-// Tells Spring boot that this class is a controller and will handle the HTTP requests
-@Controller
-// Tells Spring boot to handle requests under "/profile"  web route
-@RequestMapping("/profile")
+// This class manages the user profile, it allows the user to view and update their personal details
+// The URL path is : /profile
+@Controller // Mark the class as a controller that will show data to the user
+@RequestMapping("/profile")  // Base URL path for all endpoints in the controller
 public class ClientProfileController {
 
+    // Add the account service to have access to account related business logic
     @Autowired
-    // Inject the dependency account service.
     private AccountService accountService;
 
+    // Add the clientprofile service to have access to profile related services
     @Autowired
-    // Inject the dependencies for the Client Profile Service.
     private ClientProfileService clientProfileService;
 
-    /**
-     * GET handler for profile view.
-     *
-     * If no profile is found, a blank profile is created and populated in the view layer.
-     *
-     * @param userDetails Spring Security-authenticated user
-     * @param model       Spring MVC model to bind attributes
-     * @return profile-view.html
-     */
+    // Handles the get to show the users profile, If no profile exists an empty one is shown
     @GetMapping
-    //When somebody visits the /profile route this method will run.
-    // It uses the Spring security to get the logged in User
     public String viewProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        // If user is not logged in then redirect him to the login page
+        // Redirect to login if user is not logged in
         if (userDetails == null) {
-            return "redirect:/login";
+            return "redirect:/login"; // redirect to the login page
         }
 
-        // Check the account of the user
+        // Get the account of the logged-in user
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
-        // If the account details are non existent then redirect the user to the login page
         if (account == null) {
-            return "redirect:/login";
+            return "redirect:/login"; // if there is not an account then redirect the user to the login page
         }
 
-        //Load the user profile using the ClientProfileService and show the profile view
+        // Load the user's profile
         ClientProfile profile = clientProfileService.getByAccount(account);
+
+        // If no profile exists yet, show an empty one
         if (profile == null) {
-            profile = new ClientProfile(); // create a blank profile if the user has not profile details or a profile
+            profile = new ClientProfile(); // show an empty form of the profile
         }
 
-        // in the model add the profile of the user
+        // Send the profile data to the view using the model as a means of transportation of data
         model.addAttribute("profile", profile);
-        // return the profile view
-        return "profile-view";
+        return "profile-view"; // Display the profile view page
     }
 
-    /**
-     * GET handler to render profile edit form.
-     *
-     * @param userDetails authenticated user
-     * @param model       binds client profile to form
-     * @return profile-edit.html
-     */
+
+    // Handle the edit request to edit the profile and show the user the edit form
     @GetMapping("/edit")
-    // Redirect the user to the profile edit and show him the edit form
     public String editProfileForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        // Use the account service to get the information about the account of the user
+        // Get the logged-in user's account
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
-        // Use the ClientProfileService
+        // Check the account of the logged in user
         ClientProfile profile = clientProfileService.getByAccount(account);
 
-        // If there is no Profile then create one and link the account
+        // Create a new profile if none exists
         if (profile == null) {
-            profile = new ClientProfile();
-            profile.setAccount(account); // link account
+            profile = new ClientProfile(); // create a new profile and associate it with the account
+            profile.setAccount(account); // set the account of the user
         }
 
+        // Send the profile data to the edit form
         model.addAttribute("profile", profile);
-        return "profile-edit"; // throw the profile edit form
+        return "profile-edit"; // redirect to the edit profile
     }
 
-    /**
-     * POST handler to update the profile.
-     * <p>
-     * Data submitted via form binding is persisted to the backend using {@link ClientProfileService}.
-     *
-     * @param profile     populated profile object from the form
-     * @param userDetails current authenticated user
-     * @return redirect to profile view page
-     */
+
+    // Handle the edit function here I update the profile data after editing
+    // Use the postmapping to get data from the user in order to Submit the Profile Changes
     @PostMapping("/edit")
-    // When the user submits the edit form, this method saves the changes.
     public String updateProfile(@ModelAttribute("profile") ClientProfile profile,
                                 @AuthenticationPrincipal UserDetails userDetails) {
+        // Ensure the profile is linked to the logged-in user's account
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
-        profile.setAccount(account); // make a check and make sure the profile is tied to the correct user.
-        clientProfileService.saveProfile(profile); // use  the clientprofileservice and the method to save the profile
-        return "redirect:/profile"; // redirect the user to the profile.
+        profile.setAccount(account); // Set the association between the profile and the account
+
+        // Save the updated profile data
+        clientProfileService.saveProfile(profile);
+
+        return "redirect:/profile"; // Redirect back to the profile view
     }
 }

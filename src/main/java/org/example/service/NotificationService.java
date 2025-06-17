@@ -9,81 +9,48 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Service class that handles business logic related to notifications.
- * Supports creating, reading, and updating notification states.
- */
-@Service // Marks this class as a Spring service component
+// This service handles the user notifications, it lets me send new alerts, read them and mark them as read
+@Service // Registers the class as a service bean for dependency injection
 public class NotificationService {
 
-    // Inject the NotificationRepository to perform database operations
+    // Inject the NotificationRepository that we can do CRUD operations for notifications
     @Autowired
     private NotificationRepository notificationRepo;
 
-    /**
-     * Sends a new notification to a user with message, type, and priority.
-     *
-     * @param user     the target account for the notification
-     * @param message  the content of the notification
-     * @param type     type of notification (e.g. SECURITY, TRANSACTION)
-     * @param priority importance level (e.g. LOW, MEDIUM, HIGH)
-     */
+
+    // Send a message notification to the user
     public void sendNotification(AccountModel user, String message, String type, String priority) {
-        // Create a new Notification object
-        Notification note = new Notification();
-        // Set the target user for the notification
-        note.setUser(user);
-        // Set the notification message
-        note.setMessage(message);
-        // Set the type of the notification
-        note.setType(type);
-        // Set the current time as the timestamp
-        note.setTimestamp(LocalDateTime.now());
-        // Mark the notification as unread initially
-        note.setRead(false);
-        // Set the priority level of the notification
-        note.setPriority(priority);
-        // Save the notification to the database
-        notificationRepo.save(note);
+        Notification note = new Notification(); // create an empty notification
+        note.setUser(user); // add the user
+        note.setMessage(message); // add the message
+        note.setType(type); // Example: SECURITY, TRANSACTION
+        note.setTimestamp(LocalDateTime.now()); // add the time
+        note.setRead(false); // New notifications are unread
+        note.setPriority(priority); // Example: LOW, MEDIUM, HIGH
+
+        notificationRepo.save(note); // save the notification to the repo
     }
 
-    /**
-     * Retrieves all notifications for a user, sorted from newest to oldest.
-     *
-     * @param user the user whose notifications are to be fetched
-     * @return a list of notifications for the given user
-     */
+    // Get all notifications for a user from the newest to the oldest
     public List<Notification> getUserNotifications(AccountModel user) {
-        // Fetch all notifications for the user, ordered by timestamp descending
         return notificationRepo.findByUserOrderByTimestampDesc(user);
     }
 
-    /**
-     * Marks a single notification as read by its ID.
-     *
-     * @param id the ID of the notification to mark as read
-     */
+    // Mark one notification as read using its ID
     public void markAsRead(Long id) {
-        // Fetch the notification by ID and update its "read" status if it exists
-        notificationRepo.findById(id).ifPresent(n -> {
-            n.setRead(true); // mark as read
-            notificationRepo.save(n); // Save updated notifications
+        notificationRepo.findById(id).ifPresent(note -> {
+            note.setRead(true);
+            notificationRepo.save(note);
         });
     }
 
-    /**
-     * Marks all notifications for a user as read.
-     *
-     * @param user the user whose notifications should be updated
-     */
+
+    // Mark all notification for a user as read
     public void markAllAsRead(AccountModel user) {
-        // Fetch all notifications for the user
-        List<Notification> notes = notificationRepo.findByUserOrderByTimestampDesc(user);
-        // Iterate through the list and mark each as read
-        for (Notification note : notes) {
+        List<Notification> notes = notificationRepo.findByUserOrderByTimestampDesc(user); // find all notifications
+        for (Notification note : notes) { // iterate for each notification
             note.setRead(true);
         }
-        // Save all modified notifications in a batch
-        notificationRepo.saveAll(notes);
+        notificationRepo.saveAll(notes); // save all notifications
     }
 }

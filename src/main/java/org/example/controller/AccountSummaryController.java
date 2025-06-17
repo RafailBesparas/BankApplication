@@ -13,60 +13,47 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
-
-// Controller which is responsible for the account summary page. This controller loads the current user account data
-    // Recent transactions and we want them to be displayed on the summary dashboard
-// This marks the class here from the Spring MVC design Patter,  as controller which handles the http requests and returns views
-@Controller
-// Maps all requests that starts with /account-summary to this controller
-@RequestMapping("/account-summary")
+// Controller that Handles the Account Summary Page
+// Shows the account details and recent transactions for a logged-in user
+@Controller // Use the controller to tell the Spring boot that this class will show content to the user
+@RequestMapping("/account-summary")  // All URLs starting with /account-summary go to this controller
 public class AccountSummaryController {
 
-    // Automatic Dependency Injection
+    // Spring will automatically provide an instance of AccountService
     @Autowired
-    // Injects the AccountService so we can use it to get account and transactions data from the Service layer
     private AccountService accountService;
 
-
     /**
-     * Handles GET requests for the account summary page.
-     * <p>
-     * The method retrieves account information and recent transactions of the currently
-     * authenticated user and binds them to the model for Thymeleaf rendering.
-     *
-     * @param userDetails authenticated user from Spring Security context
-     * @param model       the model to bind view data
-     * @return the name of the Thymeleaf view template to render
+     * This method handles GET requests to /account-summary.
+     * It shows the account summary for the currently logged-in user.
      */
-    // Handles the HTTP Requests
-    @GetMapping
-    // This method will run when a logged in user visits the account summary controller
-    // It only receives the logged in user details and a Model object to send data to the view
+    // This method handles the get requests from the account-summary url
+    @GetMapping // Use get mapping to get information from the database and show it to the user
     public String showAccountSummary(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        // If the user is not logged in then redirect them to the login page
+        // If the user is not logged in, redirect them to the login page
         if (userDetails == null) {
             return "redirect:/login";
         }
 
-        // Get the account info based on the logged in user information
+        // Get the account data using the logged-in user's username
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
-        // If the user account is not found redirect them to the login again.
+
+        // If the account doesn't exist, redirect to login again
         if (account == null) {
             return "redirect:/login";
         }
 
-        // Gets a list of recent transactions for that specific account that the user has.
+        // Get the user's recent transactions
         List<Transaction> recentTransactions = accountService.getTransactionHistory(account);
 
-        // Add a lot of account details and the transaction to the model
-        // Add the accountHolder, The account Number, the accountType and the balance.
+        // Add account data and transactions to the model for use in the HTML page
         model.addAttribute("accountHolder", account.getUsername());
         model.addAttribute("accountNumber", account.getId());
-        model.addAttribute("accountType", "Standard");
+        model.addAttribute("accountType", "Standard"); // You can change this later if needed
         model.addAttribute("balance", account.getBalance());
         model.addAttribute("recentTransactions", recentTransactions);
 
-        // Tells the Spring to show the account-summary.html page
+        // Show the account-summary.html page
         return "account-summary";
     }
 }

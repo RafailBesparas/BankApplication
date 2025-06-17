@@ -6,60 +6,28 @@ import org.example.repository.ClientProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- * Service layer for accessing and managing client profile information.
- * <p>
- * Acts as an abstraction over the {@link ClientProfileRepository} and provides
- * methods to retrieve and persist Personally Identifiable Information (PII)
- * related to banking users.
- *
- * <b>Compliance:</b> This service deals with sensitive identity fields such as
- * national ID, income, address, and contact info. Proper access controls and secure
- * usage patterns must be enforced in the controller layer.
- *
- * <b>Responsibilities:</b>
- * <ul>
- *     <li>Encapsulates access to profile storage</li>
- *     <li>Prepares profiles for form pre-population</li>
- *     <li>Supports updates and new client onboarding</li>
- * </ul>
- *
- * <b>Security Note:</b> Never expose this data directly to logs or clients
- * without redaction/masking.
- *
- * @author Rafael Besparas
- */
-
-// Tells spring boot that this is a service component handling the business logic
+// This services handles the user profile data like name, address, email and income
 @Service
 public class ClientProfileService {
 
-    // // Spring injects the repository that talks to the database for ClientProfile operations.
+    // Inject the ClientProfileRepository in order to have access to crud methods from the database
     @Autowired
     private ClientProfileRepository profileRepo;
 
-    /**
-     * Retrieves the client profile associated with a given account.
-     * <p>
-     * This method is typically used to populate profile forms or dashboards.
-     *
-     * @param account the associated {@link AccountModel}
-     * @return the {@link ClientProfile} or {@code null} if none is found
-     */
-    // // Calls the repository to fetch a profile associated with the given account.
+    // Find the profile for each account in order to show the user profile to the screen
     public ClientProfile getByAccount(AccountModel account) {
         return profileRepo.findByAccount(account);
     }
 
-    /**
-     * Saves or updates the given client profile.
-     * <p>
-     * Can be used for both new registrations and profile modifications.
-     *
-     * @param profile the profile entity to persist
-     */
-    //Saves a new profile or updates an existing one in the database.
+    // Save or update a user profile information
     public void saveProfile(ClientProfile profile) {
         profileRepo.save(profile);
+    }
+
+    // Create a default empty profile for new users that will be filled later
+    public ClientProfile createDefault(AccountModel account) {
+        ClientProfile profile = new ClientProfile();
+        profile.setAccount(account);
+        return profileRepo.save(profile);
     }
 }

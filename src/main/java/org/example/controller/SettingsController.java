@@ -1,6 +1,5 @@
 package org.example.controller;
 
-import org.springframework.ui.Model;
 import org.example.model.AccountModel;
 import org.example.model.UserSettings;
 import org.example.service.AccountService;
@@ -9,54 +8,59 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-// Tells the spring boot to make this class a web controller
-// @RequestMapping("/settings"): All URLs in this class will start with /settings.
-@Controller
-@RequestMapping("/settings")
+
+// This controller handles the user settings, it shows the page and saves updates made by the user
+@Controller // this controller shows views
+@RequestMapping("/settings") // endpoint : /settings
 public class SettingsController {
 
-    // Get the current user’s account info.
+    // Inject the AccountService to handle the logic related to the users account
     @Autowired
     private AccountService accountService;
 
-    // Read or save the user's settings.
+    // Inject the UserSettings to handles the logic related to the user settings
     @Autowired
     private UserSettingsService settingsService;
 
-    // Show the setting page
+
+    // Handles the get mapping and shows the settings page for the current user
     @GetMapping
     public String showSettings(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-
-        // Get the current log in user data
+        // Get the logged-in user's account
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
-        // Gets the user's settings, or creates default ones
-        UserSettings settings = settingsService.getByAccount(account);
-        // Gets the user's settings, or creates default ones if they don’t exist
-        if (settings == null) settings = settingsService.createDefault(account);
 
-        // Add the setting to the model and let them be displayed using HTML
+        // Try to get existing settings for this account
+        UserSettings settings = settingsService.getByAccount(account);
+
+        // If no settings exist, create default ones
+        if (settings == null) {
+            settings = settingsService.createDefault(account);
+        }
+
+        // Send the settings to the HTML page, add the settings for the user to the view model
         model.addAttribute("settings", settings);
-        return "settings"; // Loads the settings HTML
+
+        // Show the settings.html view
+        return "settings";
     }
 
-    // Save and update setting from the user
+    // Handles the data and the updated settings that the user submitted
     @PostMapping
-    // Gets the current user (like before)
-    // Takes the form input from the HTML (Spring automatically maps form fields into the UserSettings object)
     public String updateSettings(@AuthenticationPrincipal UserDetails userDetails,
                                  @ModelAttribute UserSettings form) {
-        // Use the username to link the user with his user account
+        // Get the user's account again
         AccountModel account = accountService.getByUsername(userDetails.getUsername());
-        // Links the form data to the user’s account
-        form.setAccount(account); // maintain link
-        // Saves the settings using your service:
+
+        // Make sure the settings are linked to this account
+        form.setAccount(account);
+
+        // Save the settings to the database
         settingsService.saveSettings(form);
-        // Redirects back using the success flag
+
+        // Go back to the settings page with a success query parameter
         return "redirect:/settings?success";
     }
 }

@@ -6,26 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-/**
- * Repository interface for performing CRUD operations and custom queries
- * on the LoanApplication entity. Extends Spring Data JPA's JpaRepository.
- */
-public interface LoanApplicationRepository extends JpaRepository<LoanApplication, Long> {
+// Implementable interface to communicate with the database and loan table
+public interface LoanApplicationRepository extends JpaRepository<LoanApplication, Long> { // Extends JpaRepository to provide full CRUD capabilities (create, read, update, delete)
 
-    /**
-     * Finds all loan applications submitted by a specific account holder.
-     *
-     * @param account the applicant (AccountModel)
-     * @return a list of loan applications associated with the account
-     */
-    List<LoanApplication> findByApplicant(AccountModel account);
+    // Get all loans belonging to a specific user
+    List<LoanApplication> findByAccount(AccountModel account);
 
-    /**
-     * Finds all loan applications by their current status.
-     * Useful for filtering applications based on workflow (e.g., "PENDING", "APPROVED", "REJECTED").
-     *
-     * @param status the status of the loan application
-     * @return a list of loan applications matching the status
-     */
+    // Get all loans by status (e.g., "PENDING", "APPROVED", "REJECTED")
     List<LoanApplication> findByStatus(String status);
 }
