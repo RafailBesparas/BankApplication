@@ -12,239 +12,204 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Service class handling business logic for customer accounts.
- * <p>
- * This class includes account registration, authentication integration,
- * and execution of core banking operations: deposit, withdrawal, and transfer.
- *
- * <b>Security:</b> Implements Spring Security's {@link UserDetailsService} for
- * login and session support.
- *
- * <b>Compliance & Audit:</b> Every financial operation logs a corresponding {@link Transaction}
- * for traceability and is persisted securely.
- *
- * <b>Design:</b> This class orchestrates repository access and enforces business constraints.
- *
- * @author Rafael Besparas
- */
+// Class that contain the business logic for User Accounts deposits, withdraws, transfers
+@Service // Marks this class as a Spring service component.
+public class AccountService implements UserDetailsService { // Implements Spring Security's user detail loading logic.
 
-// Marks the class as a Service component and used for the businees Logic
-@Service
-public class AccountService implements UserDetailsService {
+    // Injects the account repository to get access to database crud operations
+    @Autowired private AccountRepository accountRepository;
 
-    // Automatically injects the dependencies needed and the Account Repository to perform database operations on accounts
-    @Autowired
-    private AccountRepository accountRepository;
+    // Injects the transaction repository to get access to a database crud operations
+    @Autowired private TransactionRepository transactionRepository;
 
-    @Autowired
-    private TransactionEventProducer kafkaProducer;
+    //Injects the Kafka event producer in order to subscribe to transactions and then eventually show the message
+    @Autowired private TransactionEventProducer kafkaProducer;
 
-    // Injects the Transaction repository to store and fetch transaction records
-    @Autowired
-    private TransactionRepository transactionRepository;
+    // Injects the notification service in order to have the business logic of notifications
+    @Autowired private NotificationService notificationService;
 
-    // Injects the password encoder to hash the password before saving them
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    // Inject the encrypter in order to encrypt the passwords
+    @Autowired private BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
-    private NotificationService notificationService;
+    @PersistenceContext
+    private EntityManager entityManager; // Provides direct control over JPA operations.
 
-    // Threshold for low balance in an account
+    // Used to define the lowest balance for alerts
     private static final BigDecimal LOW_BALANCE_THRESHOLD = new BigDecimal("100.00");
 
-
-    /**
-     * Loads user credentials and roles for authentication.
-     *
-     * @param username the username of the customer
-     * @return Spring Security-compatible {@link UserDetails} object
-     * @throws UsernameNotFoundException if user not found
-     */
-    @Override
+    @Override // override the method
+    // This method loads the user
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Searches the database for an account using the account username
-        AccountModel account = accountRepository.findByUsername(username);
+        System.out.println("Looking for user: " + username); // used for debugging to check how many users are associated with one account
+        AccountModel account = accountRepository.findByUsername(username); // Looks up the user in the database.
 
-        // If the account username is not found then throw the error User not found
-        if (account == null) {
-            throw new UsernameNotFoundException("User not found");
+        if (account == null) { // if the user is not found
+            throw new UsernameNotFoundException("User not found"); // throw an exception
         }
-        // If the username found return a new Account Model instance with user Details and a user role
+
+        // Return a new UserDetails-compliant AccountModel with role "USER"
         return new AccountModel(
-                account.getUsername(),
-                account.getPassword(),
-                account.getBalance(),
-                account.getTransactions(),
-                Collections.singleton(new SimpleGrantedAuthority("USER"))
+                account.getUsername(), // get the username
+                account.getPassword(), // get the passord
+                account.getBalance(), // get the balance
+                account.getTransactions(), // get transactions
+                Collections.singleton(new SimpleGrantedAuthority("USER")) // Account model with the role USER
         );
     }
 
-    public List<Transaction> searchTransactions(AccountModel account, String type, BigDecimal min, BigDecimal max, LocalDateTime from, LocalDateTime to) {
-        return transactionRepository.searchTransactions(account, type, min, max, from, to);
-    }
-
-    /**
-     * Retrieves the full account model by username.
-     *
-     * @param username the customer's unique login ID
-     * @return {@link AccountModel} or {@code null} if not found
-     */
-    // Fetch an account using the username
+    // Get an account by username
     public AccountModel getByUsername(String username) {
-        return accountRepository.findByUsername(username);
+
+        return accountRepository.findByUsername(username); // Use the repository function to query the database
     }
 
-    /**
-     * Registers a new account with an initial balance of 0.
-     * Password is stored using BCrypt encryption.
-     *
-     * @param account new account object with username and raw password
-     */
+    // Register a new account
     public void register(AccountModel account) {
-        // hash the password before storing it in the database
-        account.setPassword(passwordEncoder.encode(account.getPassword()));
-        // Set the initial balance to zero
-        account.setBalance(BigDecimal.ZERO);
-        // Save the user to the database
-        accountRepository.save(account);
+        account.setPassword(passwordEncoder.encode(account.getPassword())); // Hash the password
+        account.setBalance(BigDecimal.ZERO); // Set the starting balance to 0
+        accountRepository.save(account); // Save the new account to the database
     }
 
-    /**
-     * Increases the account's balance by the deposit amount.
-     * Also persists a DEPOSIT transaction record.
-     *
-     * @param account the target account
-     * @param amount  the amount to deposit
-     */
-    public void deposit(AccountModel account, BigDecimal amount) {
-        // Add the deposit amount to the current balance
-        account.setBalance(account.getBalance().add(amount));
-        // Create a transaction record for the deposit
-        Transaction tx = new Transaction(amount, "DEPOSIT", LocalDateTime.now(), account);
+    // Handles the deposit operations
+    public void deposit(AccountModel account, BigDecimal amount, String message) {
+        validateMessage(message); // Ensure the message is not empty
+        account.setBalance(account.getBalance().add(amount)); // Increase the amount in the balance
 
-        kafkaProducer.sendTransactionEvent("Deposit: $" + amount + " by user " + account.getUsername());
+        // Create a deposit transactions
+        Transaction tx = new Transaction(amount, message, "DEPOSIT", LocalDateTime.now(), account);
+        // Message for Kafka notifications
+        kafkaProducer.sendTransactionEvent("💰 Deposit of $" + amount + " by " + account.getUsername());
 
-        // Save the transaction to the database
+        // Save a transaction
         transactionRepository.save(tx);
-        // Update the account with the new balance
+        // Save the updated account with the new balance
         accountRepository.save(account);
     }
 
-    /**
-     * Decreases the account's balance by the withdrawal amount if sufficient funds exist.
-     * Also persists a WITHDRAWAL transaction record.
-     *
-     * @param account the target account
-     * @param amount  the amount to withdraw
-     * @throws RuntimeException if balance is insufficient
-     */
-    public void withdraw(AccountModel account, BigDecimal amount) {
+    // Perform the withdraw operation
+    public void withdraw(AccountModel account, BigDecimal amount, String message) {
+        validateMessage(message); // Validate message
 
-        // If the user does not have enough money throw an error
+        // Check if the balance is insufficient
         if (account.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds. You have no money at all! Go get some work done.");
+            // Throw an exception if there are insufficient funds
+            throw new RuntimeException("Insufficient funds.");
         }
 
-        // Subtract the withdrawal amount from the current balance
+        // Deduct the amount of money from the account
         account.setBalance(account.getBalance().subtract(amount));
-        // Create a transaction record for the withdrawal
-        Transaction tx = new Transaction(amount, "WITHDRAWAL", LocalDateTime.now(), account);
-        // Save the transaction to the database
-        transactionRepository.save(tx);
-        // Save the updated balance to the database
-        accountRepository.save(account);
+        // Create withdrawal transaction
+        Transaction tx = new Transaction(amount, message, "WITHDRAWAL", LocalDateTime.now(), account);
+        // Create the kafka message for the console
+        kafkaProducer.sendTransactionEvent("🏧 Withdrawal of $" + amount + " by " + account.getUsername());
 
-        kafkaProducer.sendTransactionEvent("Withdraw: $" + amount + " by user " + account.getUsername());
+        transactionRepository.save(tx); // Save transaction
+        accountRepository.save(account); // Save updated account
 
+        // Check if the balance is low
         if (account.getBalance().compareTo(LOW_BALANCE_THRESHOLD) < 0) {
+            // Send notification message and priority
             notificationService.sendNotification(
                     account,
-                    "⚠️ Your account balance is below $" + LOW_BALANCE_THRESHOLD + ". Please consider topping up.",
+                    "⚠️ Your account balance is below $" + LOW_BALANCE_THRESHOLD + ".",
                     "ACCOUNT",
                     "HIGH"
             );
         }
-
     }
 
-    /**
-     * Transfers funds between two accounts. Logs both IN and OUT transactions.
-     *
-     * @param senderUsername    source account username
-     * @param recipientUsername target account username
-     * @param amount            transfer amount
-     * @throws RuntimeException if recipient is not found or sender has insufficient funds
-     */
+    @Transactional // make the function transactional because I want it to perform transactions
+    // Used to manage transactions declarative, this method runs within the database.
+    public void transfer(String senderUsername, String recipientUsername, BigDecimal amount, String message) {
+        try {
+            validateMessage(message); // ensure the message is valid
 
-    public void transfer(String senderUsername, String recipientUsername, BigDecimal amount) {
-        // Look for both sender and recipient account
-        AccountModel sender = getByUsername(senderUsername);
-        AccountModel recipient = getByUsername(recipientUsername);
+            AccountModel sender = getByUsername(senderUsername); // Find the sender
+            AccountModel recipient = getByUsername(recipientUsername); // find the recient
 
-        // If the recipient does not exist throw an error
-        if (recipient == null) {
-            throw new RuntimeException("Recipient does not exist.");
+            if (recipient == null) throw new RuntimeException("Recipient does not exist."); // if the recipient does not exist throw an error
+
+            if (sender.getBalance().compareTo(amount) < 0) throw new RuntimeException("Insufficient funds for transfer."); // If there are not funds throw an error
+
+            // Subtract from the sender
+            sender.setBalance(sender.getBalance().subtract(amount));
+            // Add to the recipient
+            recipient.setBalance(recipient.getBalance().add(amount));
+
+            //Sender's outgoing transaction.
+            Transaction txOut = new Transaction(amount, message, "TRANSFER_OUT", LocalDateTime.now(), sender);
+            // Recipient's incoming transaction.
+            Transaction txIn = new Transaction(amount, message, "TRANSFER_IN", LocalDateTime.now(), recipient);
+
+            //save the out transaction to the repository
+            transactionRepository.save(txOut);
+            System.out.println("✅ TX OUT saved: " + txOut.getType() + " - $" + txOut.getAmount()); // log to check if the transaction is logged
+
+            // save the transaction incoming
+            transactionRepository.save(txIn);
+            System.out.println("✅ TX IN saved: " + txIn.getType() + " - $" + txIn.getAmount()); // log the transaction
+
+            // Save the sender
+            accountRepository.save(sender);
+
+            // Save the recipient
+            accountRepository.save(recipient);
+
+            // Log the changes in the sender balance
+            System.out.println("✅ Saving sender: " + sender.getUsername() + " new balance: " + sender.getBalance());
+
+            // Log the changes in the recipient challenge
+            System.out.println("✅ Saving recipient: " + recipient.getUsername() + " new balance: " + recipient.getBalance());
+
+            // Give to the user the Kafka message
+            kafkaProducer.sendTransactionEvent("🔁 $" + amount + " transferred from " + senderUsername + " to " + recipientUsername);
+
+            // Add notification for the sender
+            notificationService.sendNotification(sender, "You sent $" + amount + " to " + recipientUsername, "TRANSACTION", "MEDIUM");
+            // Add notification to the recipient
+            notificationService.sendNotification(recipient, "You received $" + amount + " from " + senderUsername, "TRANSACTION", "MEDIUM");
+
+            // Alert if sender's balance is now low
+            if (sender.getBalance().compareTo(LOW_BALANCE_THRESHOLD) < 0) {
+                notificationService.sendNotification(
+                        sender,
+                        "⚠️ Your balance is below $" + LOW_BALANCE_THRESHOLD + " after the transfer.",
+                        "ACCOUNT",
+                        "HIGH"
+                );
+            }
+
+        } catch (Exception e) { // Catch any exception to ensure rollback
+            System.err.println("❌ Exception during transfer: " + e.getMessage());
+            e.printStackTrace(); // Print full stack trace
+            throw e; // re-throw to trigger rollback
         }
-
-        // If the sender has no money throw an error
-        if (sender.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds for transfer.");
-        }
-
-        kafkaProducer.sendTransactionEvent("Transfer: $" + amount + " from " + senderUsername + " to " + recipientUsername);
-
-        // Update balances
-        sender.setBalance(sender.getBalance().subtract(amount));
-
-        // Send a notification if the user has a low balance threshold
-        if (sender.getBalance().compareTo(LOW_BALANCE_THRESHOLD) < 0) {
-            notificationService.sendNotification(
-                    sender,
-                    "⚠️ Your account balance is below $" + LOW_BALANCE_THRESHOLD + " after transfer.",
-                    "ACCOUNT",
-                    "HIGH"
-            );
-        }
-
-        // Subtract from the sender and add to the recipient
-        recipient.setBalance(recipient.getBalance().add(amount));
-
-        // Save transactions
-        Transaction txOut = new Transaction(amount, "Transfer Out to " + recipientUsername, LocalDateTime.now(), sender);
-        // Create two transaction records one for the sender and one for the recipient
-        Transaction txIn = new Transaction(amount, "Transfer In from " + senderUsername, LocalDateTime.now(), recipient);
-
-        notificationService.sendNotification(sender, "You transferred $" + amount + " to " + recipientUsername, "TRANSACTION", "MEDIUM");
-        notificationService.sendNotification(recipient, "You received $" + amount + " from " + senderUsername, "TRANSACTION", "MEDIUM");
-
-        // Save both transaction records
-        transactionRepository.save(txOut);
-        transactionRepository.save(txIn);
-
-        // Save updated accounts
-        accountRepository.save(sender);
-        accountRepository.save(recipient);
     }
 
-    /**
-     * Retrieves all transaction history linked to an account.
-     * Used for dashboard, reporting, and audits.
-     *
-     * @param account the account in question
-     * @return list of transactions
-     */
-
-    // Return all transactions for the given account.
+    // Returns all transactions for an account
     public List<Transaction> getTransactionHistory(AccountModel account) {
         return transactionRepository.findByAccount(account);
     }
 
+    // Search all the transactions using the filters
+    public List<Transaction> searchTransactions(AccountModel account, String type, BigDecimal min, BigDecimal max, LocalDateTime from, LocalDateTime to) {
+        return transactionRepository.searchTransactions(account, type, min, max, from, to);
+    }
+
+    // Validates that a message is present
+    private void validateMessage(String message) {
+        if (message == null || message.trim().isEmpty()) {
+            throw new IllegalArgumentException("Transaction message cannot be empty."); // Transaction messages cannot be empty
+        }
+    }
 }

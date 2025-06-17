@@ -1,97 +1,63 @@
 package org.example.model;
 
-// JPA annotations for ORM mapping
 import jakarta.persistence.*;
-// Precise numeric representation for financial values
 import java.math.BigDecimal;
-// Represents due date of a repayment
 import java.time.LocalDate;
 
 /**
- * Entity representing a single repayment entry for a loan.
- * Each entry includes details such as principal, interest, due date,
- * whether it's been paid, and the remaining loan balance.
+ * This class stores details about a single repayment for a loan.
+ * Each repayment has a due date, amount, and status (paid or not).
  */
-@Entity
-// Marks this class as a persistent JPA entity
+// This class stores the details of a user to a single repayment for a loan
+    // Each repayment can have a due date, an amount and a status paid or unpaid
+@Entity // Marks this class as a JPA entity for database persistence.
 public class RepaymentSchedule {
 
-    /** Primary key for the repayment schedule entry */
+    // Unique ID for each repayment record
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Auto-incremented primary key
 
-    // Many repayment schedule entries can be associated with one loan
-    @ManyToOne
-    @JoinColumn(name = "loan_id")
+    // The loan that this repayment belongs to
+    @ManyToOne // One loan can have many repayment installations
+    @JoinColumn(name = "loan_id") // Foreign key in DB linking to the loan
     private LoanApplication loan;
 
-    /** Due date of the scheduled repayment */
+    // The date by which this repayment should be made
     private LocalDate dueDate;
-    /** Portion of the payment that goes toward reducing principal */
+
+    // Amount that reduces the loan principal
     private BigDecimal principal;
-    /** Portion of the payment that goes toward interest */
+
+    // Amount that goes toward interest
     private BigDecimal interest;
-    /** Remaining balance on the loan after this payment */
+
+    // Loan balance left after this repayment
     private BigDecimal remainingBalance;
-    /** Whether the repayment has been completed or not */
+
+    // True if this repayment has already been made
     private boolean paid;
 
-    // Getters & Setters...
+    // ===== Getters and Setters =====
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public LoanApplication getLoan() { return loan; }
+    public void setLoan(LoanApplication loan) { this.loan = loan; }
 
-    public LoanApplication getLoan() {
-        return loan;
-    }
+    public LocalDate getDueDate() { return dueDate; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
 
-    public void setLoan(LoanApplication loan) {
-        this.loan = loan;
-    }
+    public BigDecimal getPrincipal() { return principal; }
+    public void setPrincipal(BigDecimal principal) { this.principal = principal; }
 
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
+    public BigDecimal getInterest() { return interest; }
+    public void setInterest(BigDecimal interest) { this.interest = interest; }
 
-    public void setDueDate(LocalDate dueDate) {
-        this.dueDate = dueDate;
-    }
+    public BigDecimal getRemainingBalance() { return remainingBalance; }
+    public void setRemainingBalance(BigDecimal remainingBalance) { this.remainingBalance = remainingBalance; }
 
-    public BigDecimal getPrincipal() {
-        return principal;
-    }
-
-    public void setPrincipal(BigDecimal principal) {
-        this.principal = principal;
-    }
-
-    public BigDecimal getInterest() {
-        return interest;
-    }
-
-    public void setInterest(BigDecimal interest) {
-        this.interest = interest;
-    }
-
-    public BigDecimal getRemainingBalance() {
-        return remainingBalance;
-    }
-
-    public void setRemainingBalance(BigDecimal remainingBalance) {
-        this.remainingBalance = remainingBalance;
-    }
-
-    public boolean isPaid() {
-        return paid;
-    }
-
-    public void setPaid(boolean paid) {
-        this.paid = paid;
-    }
+    public boolean isPaid() { return paid; }
+    public void setPaid(boolean paid) { this.paid = paid; }
 }

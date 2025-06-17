@@ -11,57 +11,35 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
 
-/**
- * Controller responsible for handling requests related to transaction analytics.
- * This includes showing the user's monthly spending and category-based expenditure.
- *
- * URL Path: /analytics
- *
- * Access is secured and tied to the authenticated user's principal.
- *
- * Dependencies:
- * - AccountService: to retrieve account details based on the logged-in user.
- * - TransactionAnalyticsService: to compute and return analytical data.
- */
-
-// Controller bean tells the Spring Boot that this class with be the Contoller in the MVC Architecture
-    // So it will handle the HTTP requests from my website
+// Controller that handles the requests for Analytics Dashboards
+// The target in the next steps would be to show the monthly spending by each category for the logged in user
+// Path: /analytics
 @Controller
-// When the user visit this page run this code in this controller class
 @RequestMapping("/analytics")
 public class AnalyticsController {
 
-    // Inject the depencency Autowired so that I will have the necessary model to work with
-    // We need this to access account information
+    // Injecting the AccountService to get user account information
     @Autowired
     private AccountService accountService;
 
-    // Import the dependencies needed for the Analytics Service for transactions
-    // Get the transaction analytics data
+    // Injecting the Analytics Service to calculate and provide analytics data
     @Autowired
     private TransactionAnalyticsService analyticsService;
 
-    /**
-     * Handles GET requests to "/analytics".
-     * Fetches the currently logged-in user's account and passes spending analytics to the view.
-     *
-     * @param model Spring's UI model used to pass attributes to the Thymeleaf (or JSP) view
-     * @param principal Authenticated user's principal, used to identify the currently logged-in user
-     * @return View name of the analytics dashboard
-     */
+    // Handle the get requests to /analytics
+    // Gets all account details of the logged-in user and add them to analytics data view
     @GetMapping
     public String showDashboard(Model model, Principal principal) {
-
-        // Get the account details of the current user and their username
+        // Get the account of the current user using their username
         AccountModel user = accountService.getByUsername(principal.getName());
 
-        // add the monthly spending data to the model
+        // Add total spending per month to the model (used in charts or tables)
         model.addAttribute("monthlySpending", analyticsService.getMonthlySpending(user));
 
-        // Add the category based spending to the model (future feature that will be implemented with machine learning)
+        // Add spending breakdown by category (future feature, possibly ML-powered)
         model.addAttribute("categorySpending", analyticsService.getSpendingByCategory(user));
 
-        // Present to the user the view analytics dashboard
+        // Return the dashboard view located in templates/analytics/dashboard.html
         return "analytics/dashboard";
     }
 }

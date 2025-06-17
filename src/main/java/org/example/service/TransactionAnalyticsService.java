@@ -12,58 +12,51 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Service class that provides analytical methods for transaction data.
- * Includes monthly spending trends and spending by category.
+ * This service helps analyze how users spend their money.
+ * It can show spending trends by month or by transaction type.
  */
-@Service
-// Marks this class as a Spring-managed service component
+// Service that helps analyze how users spend their money
+    // Spending trends by month or by transactions
+@Service  // Registers this class as a Spring service component.
 public class TransactionAnalyticsService {
 
-    // Inject the TransactionRepository for database access
+    // Inject the Transaction repository to be able to do Crud operations in the repository table
     @Autowired
     private TransactionRepository transactionRepository;
 
-    /**
-     * Calculates total spending per month for the given account.
-     * It filters only "withdrawal" or "transfer out" type transactions.
-     *
-     * @param account the account to analyze
-     * @return a map with keys as "YYYY-MM" and values as total spending amounts
-     */
+    // Get the total spending per month for a user
+    // Counts money that went out withdrawals or transfers
     public Map<String, BigDecimal> getMonthlySpending(AccountModel account) {
-        // Fetch all transactions associated with the given account
-        List<Transaction> transactions = transactionRepository.findByAccount(account);
-        // Process the transactions using a Stream
-        return transactions.stream()
-                // Filter only withdrawals and outgoing transfers
-                .filter(tx -> tx.getType().toLowerCase().contains("withdrawal") || tx.getType().toLowerCase().contains("transfer out"))
-                // Group by year-month string like "2025-04"
+        List<Transaction> transactions = transactionRepository.findByAccount(account); // Fetch all user's transactions.
+
+        return transactions.stream() // Begin stream processing
+                // Keep only transactions where money is going out
+                .filter(tx -> isSpendingType(tx.getType()))
+                // Group by year and month (like "2025-04")
                 .collect(Collectors.groupingBy(
-                        tx -> tx.getTimestamp().getYear() + "-" + String.format("%02d", tx.getTimestamp().getMonthValue()),
-                        // Aggregate transaction amounts using reducing to sum values
+                        tx -> tx.getTimestamp().getYear() + "-" + String.format("%02d", tx.getTimestamp().getMonthValue()),  // Group key: "YYYY-MM"
+                        // Map each transaction to its amount, // Reduce amounts per month using summation
                         Collectors.mapping(Transaction::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
                 ));
     }
 
-    /**
-     * Calculates total spending by transaction type (category).
-     * Only considers types like "withdrawal" and "transfer out".
-     *
-     * @param account the account to analyze
-     * @return a map with transaction types as keys and total spent as values
-     */
+
+    // get the total spending grouped by a type
     public Map<String, BigDecimal> getSpendingByCategory(AccountModel account) {
-        // Fetch all transactions for the account
-        List<Transaction> transactions = transactionRepository.findByAccount(account);
-        // Process and aggregate them by type
-        return transactions.stream()
-                // Filter only outgoing money flows
-                .filter(tx -> tx.getType().toLowerCase().contains("transfer out") || tx.getType().toLowerCase().contains("withdrawal"))
-                // Group by the transaction type (category) string
-                .collect(Collectors.groupingBy(
-                        Transaction::getType,
-                        // Sum the amounts in each group
-                        Collectors.mapping(Transaction::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
+        List<Transaction> transactions = transactionRepository.findByAccount(account); // Load all user's transactions.
+
+        return transactions.stream() // Begin stream
+                .filter(tx -> isSpendingType(tx.getType())) // Keep only withdrawals and transfers out
+                .collect(Collectors.groupingBy( // Group by transaction type and sum amounts
+                        Transaction::getType, // Use transaction type as the group key
+                        Collectors.mapping(Transaction::getAmount,  // Map each to its amount
+                                Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)) // Reduce using BigDecimal addition
                 ));
+    }
+
+    // Helper method to check if the transaction type is spending related
+    private boolean isSpendingType(String type) {
+        String lower = type.toLowerCase();  // Convert to lowercase to avoid case mismatch
+        return lower.contains("withdrawal") || lower.contains("transfer out"); // Check if it's a spending type
     }
 }

@@ -1,31 +1,29 @@
 package org.example.kafka;
 
-// Import the KafkaListener annotation to listen to Kafka topics
 import org.springframework.kafka.annotation.KafkaListener;
-
-// Import the Service annotation to register this class as a Spring service
 import org.springframework.stereotype.Service;
 
 /**
- * Service class responsible for consuming messages from the Kafka topic "transaction-events".
- * This is part of the event-driven architecture where transaction events are logged or processed.
+ * This class listens to Kafka messages about transactions.
+ * When a new transaction happens, a message is sent to the "transaction-events" topic.
+ * This class receives and prints that message.
  */
-// Marks this class as a Spring-managed service component
-@Service
+// This class in the Consumer
+    // It listed to the Kafka messages about transactions
+    // When a new transaction happends, a message is sent to the transaction events topic
+    // This class subcribes to the events and prints the message
+@Service // Register this class as a service which is used for Business logic
 public class TransactionEventConsumer {
 
-    /**
-     * Consumes messages from the "transaction-events" Kafka topic.
-     * The consumer belongs to the "transaction-logger" consumer group.
-     *
-     * @param message the message payload received from the Kafka topic
-     */
+    // Method that runs automatically when a new message is received from Kafka
+    // Listens to the transactions events topic
     @KafkaListener(
-            topics = "transaction-events", // Topic to listen to
-            groupId = "transaction-logger" // Consumer group ID for parallel consumption control
+            topics = "transaction-events",       // Name of the Kafka topic
+            groupId = "transaction-logger"       // Consumer group ID to coordinate parallel listeners
     )
+
     public void consume(String message) {
-        // Output the received transaction event to the console (for logging/demo purposes)
-        System.out.println("🔔 Transaction Event Received: " + message);
+        // Print the message to the console
+        System.out.println("🔔 New Transaction Event: " + message);
     }
 }
