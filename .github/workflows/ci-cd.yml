@@ -80,7 +80,6 @@ jobs:
     needs: [dockerize]
     environment:
       name: production
-      url: ${{ secrets.PRODUCTION_URL }}
     steps:
       - name: SSH & Deploy
         uses: appleboy/ssh-action@master
