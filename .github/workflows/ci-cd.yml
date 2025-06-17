@@ -1,5 +1,6 @@
 name: CI/CD Pipeline
 
+# in the branches of main and develop run this pipeline
 on:
   push:
     branches:
@@ -10,7 +11,9 @@ on:
       - main
       - develop
 
+# Jobs to do
 jobs:
+  # First is linting
   lint:
     name: Lint Java Code
     runs-on: ubuntu-latest
@@ -24,6 +27,7 @@ jobs:
       - name: Run Checkstyle
         run: mvn checkstyle:check
 
+ # Testing job where I run the tests of exist
   test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
@@ -37,6 +41,7 @@ jobs:
       - name: Run Tests
         run: mvn test
 
+ # Build the application into a JAR Package/File
   build:
     name: Build JAR Package
     runs-on: ubuntu-latest
@@ -50,6 +55,7 @@ jobs:
       - name: Build Project
         run: mvn package -DskipTests
 
+# Dockerize the application
   dockerize:
     name: Dockerize App
     runs-on: ubuntu-latest
@@ -67,6 +73,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/banking-app:${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/banking-app:latest
 
+# Deploy the application to a production server
   deploy:
     name: Deploy to Production Server
     runs-on: ubuntu-latest
